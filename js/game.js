@@ -1741,6 +1741,10 @@ function mostrarMensaje(texto, tipo) {
     textoFinal += ` ¡Combo x${comboActual}! 🔥`;
   }
 
+  if (tipo === 'error') {
+    trackMP('game_error', { 'mensaje_error': texto });
+  }
+
   container.textContent = textoFinal;
   container.className = 'notificacion-toast visible ' + tipo;
 
