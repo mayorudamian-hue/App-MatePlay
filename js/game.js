@@ -15,7 +15,7 @@ const RUTAS_JSON = {
 const TIEMPO_DEFECTO = 60;
 const TIEMPO_POR_EJERCICIO = 60; // 1 minuto por ejercicio
 let cursoSeleccionado = '', nombreAlumno = '', comboActual = 0;
-let elementoArrastrado = null, offsetX = 0, offsetY = 0, zonaDestino = null;
+let elementoArrastrado = null, offsetX = 0, offsetY = 0, zonaDestino = null, deferredPrompt = null, rectsDestino = [], lastX = 0;
 
 // ── Google Analytics Helper ───────────────────────────────────
 function trackMP(eventName, params = {}) {
@@ -826,32 +826,42 @@ function iniciarArrastre(e) {
   elementoArrastrado = e.currentTarget;
   if (elementoArrastrado.classList.contains('usada')) return;
   reproducirSonido('grab');
-  const touch = e.touches ? e.touches[0] : e;
+  const touch = (e.touches && e.touches.length > 0) ? e.touches[0] : e;
 
   // Guardamos estilos de posición para restaurar al soltar
+  const s = elementoArrastrado.style;
   elementoArrastrado._estilosOriginales = {
-    position:     elementoArrastrado.style.position     || '',
-    left:         elementoArrastrado.style.left         || '',
-    top:          elementoArrastrado.style.top          || '',
-    zIndex:       elementoArrastrado.style.zIndex       || '',
-    pointerEvents:elementoArrastrado.style.pointerEvents|| '',
-    width:        elementoArrastrado.style.width        || ''
+    position: s.position, left: s.left, top: s.top, zIndex: s.zIndex,
+    pointerEvents: s.pointerEvents, width: s.width, transform: s.transform
   };
 
   // Fijamos el tamaño ANTES de pasar a fixed para que no colapsen
   const naturalW = elementoArrastrado.offsetWidth;
   const naturalH = elementoArrastrado.offsetHeight;
+  const rect = elementoArrastrado.getBoundingClientRect();
 
-  // Usamos el centro del elemento como punto de agarre para evitar
-  // que el transform de :active distorsione el cálculo del offset
-  offsetX = naturalW / 2;
-  offsetY = naturalH / 2;
+  // Calculamos el offset exacto desde donde se tocó para evitar saltos al centro
+  offsetX = touch.clientX - rect.left;
+  offsetY = touch.clientY - rect.top;
 
   elementoArrastrado.classList.add('arrastrando');
   elementoArrastrado.style.position = 'fixed';
+  // Seteamos la base en 0,0 para que translate3d sea exacto respecto al viewport
+  elementoArrastrado.style.top = '0';
+  elementoArrastrado.style.left = '0';
   elementoArrastrado.style.width = naturalW + 'px';
   elementoArrastrado.style.zIndex = '1000';
   elementoArrastrado.style.pointerEvents = 'none';
+  elementoArrastrado._rectInicio = rect;
+  elementoArrastrado.style.willChange = 'transform';
+  lastX = touch.clientX;
+
+  // Optimización para móviles antiguos: Cacheamos las áreas de destino al inicio
+  rectsDestino = Array.from(document.querySelectorAll('.caja-pizza, .bowl')).map(el => ({
+    el: el,
+    rect: el.getBoundingClientRect()
+  }));
+
   moverElemento(touch.clientX, touch.clientY);
   document.addEventListener('touchmove', arrastrar, { passive: false });
   document.addEventListener('touchend', soltar);
@@ -859,44 +869,78 @@ function iniciarArrastre(e) {
   document.addEventListener('mouseup', soltar);
 }
 function arrastrar(e) {
-  e.preventDefault();
-  const touch = e.touches ? e.touches[0] : e;
-  moverElemento(touch.clientX, touch.clientY);
-  const elemDebajo = document.elementFromPoint(touch.clientX, touch.clientY);
-  zonaDestino = elemDebajo && (elemDebajo.closest('.caja-pizza') || elemDebajo.closest('.bowl'));
-  document.querySelectorAll('.caja-pizza,.bowl').forEach(function(zona) {
-    zona.style.outline = zona === zonaDestino ? '3px solid #2ecc71' : 'none';
-  });
+  if (e.cancelable) e.preventDefault();
+  const touch = (e.touches && e.touches.length > 0) ? e.touches[0] : e;
+  const x = touch.clientX;
+  const y = touch.clientY;
+  moverElemento(x, y);
+
+  // Detección de colisión manual: Comparamos coordenadas contra rectángulos cacheados
+  let nuevaZona = null;
+  for (let i = 0; i < rectsDestino.length; i++) {
+    const target = rectsDestino[i];
+    if (x >= target.rect.left && x <= target.rect.right && y >= target.rect.top && y <= target.rect.bottom) {
+      nuevaZona = target.el;
+      break;
+    }
+  }
+
+  if (nuevaZona !== zonaDestino) {
+    if (zonaDestino) zonaDestino.style.outline = 'none';
+    if (nuevaZona) nuevaZona.style.outline = '3px solid #2ecc71';
+    zonaDestino = nuevaZona;
+  }
 }
 function moverElemento(x, y) {
   if (!elementoArrastrado) return;
-  elementoArrastrado.style.left = (x - offsetX) + 'px';
-  elementoArrastrado.style.top = (y - offsetY) + 'px';
+  const deltaX = x - lastX;
+  // Calculamos la rotación proporcional a la velocidad horizontal (deltaX)
+  // Limitamos el ángulo entre -12 y 12 grados para que no gire de más
+  const rotacion = Math.max(-12, Math.min(12, deltaX * 1.5));
+  elementoArrastrado.style.transform = `translate3d(${x - offsetX}px, ${y - offsetY}px, 0) scale(1.1) rotate(${rotacion}deg)`;
+  lastX = x;
 }
 function soltar(e) {
+  if (!elementoArrastrado) return;
+  const el = elementoArrastrado;
+  const target = zonaDestino;
+
   document.removeEventListener('touchmove', arrastrar);
   document.removeEventListener('touchend', soltar);
   document.removeEventListener('mousemove', arrastrar);
   document.removeEventListener('mouseup', soltar);
-  if (!elementoArrastrado) return;
-  // Restaurar solo los estilos de posicionamiento, no borrar todo
-  const orig = elementoArrastrado._estilosOriginales || {};
-  elementoArrastrado.style.position     = orig.position     || '';
-  elementoArrastrado.style.left         = orig.left         || '';
-  elementoArrastrado.style.top          = orig.top          || '';
-  elementoArrastrado.style.zIndex       = orig.zIndex       || '';
-  elementoArrastrado.style.pointerEvents = orig.pointerEvents || '';
-  elementoArrastrado.style.width         = orig.width        || '';
-  elementoArrastrado.classList.remove('arrastrando');
-  document.querySelectorAll('.caja-pizza,.bowl').forEach(function(z) { z.style.outline = 'none'; });
-  if (zonaDestino) {
+
+  const restaurar = (obj) => {
+    const orig = obj._estilosOriginales || {};
+    obj.style.position     = orig.position     || '';
+    obj.style.left         = orig.left         || '';
+    obj.style.top          = orig.top          || '';
+    obj.style.zIndex       = orig.zIndex       || '';
+    obj.style.pointerEvents = orig.pointerEvents || '';
+    obj.style.width         = orig.width        || '';
+    obj.style.transform      = orig.transform     || '';
+    obj.style.transition     = '';
+    obj.style.willChange     = '';
+    obj.classList.remove('arrastrando');
+    document.querySelectorAll('.caja-pizza,.bowl').forEach(z => z.style.outline = 'none');
+  };
+
+  if (target) {
     reproducirSonido('drop');
-    const tipo = elementoArrastrado.dataset.tipo;
-    const valor = elementoArrastrado.dataset.valor || elementoArrastrado.textContent.trim();
-    if (tipo === 'porcion') window.agregarPorcionAPizza(valor, elementoArrastrado, zonaDestino);
-    else if (tipo === 'jarra') window.agregarJarraABowl(valor, elementoArrastrado);
+    restaurar(el);
+    const tipo = el.dataset.tipo;
+    const valor = el.dataset.valor || el.textContent.trim();
+    if (tipo === 'porcion') window.agregarPorcionAPizza(valor, el, target);
+    else if (tipo === 'jarra') window.agregarJarraABowl(valor, el);
+  } else {
+    // Animación de regreso: usamos un cubic-bezier para un efecto de "rebote" suave
+    el.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+    el.style.transform = `translate3d(${el._rectInicio.left}px, ${el._rectInicio.top}px, 0) scale(1) rotate(0deg)`;
+    
+    // Esperamos a que termine la animación para devolver el objeto al flujo normal del DOM
+    setTimeout(() => restaurar(el), 400);
   }
-  elementoArrastrado = null; zonaDestino = null;
+  elementoArrastrado = null; zonaDestino = null; rectsDestino = [];
 }
 
 // ── Mostrar juego ──────────────────────────────────────────────
