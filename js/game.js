@@ -829,6 +829,14 @@ function iniciarArrastre(e) {
   const touch = e.touches ? e.touches[0] : e;
   const rect = elementoArrastrado.getBoundingClientRect();
   offsetX = touch.clientX - rect.left; offsetY = touch.clientY - rect.top;
+  // Guardar estilos originales para restaurar al soltar
+  elementoArrastrado._estilosOriginales = {
+    position: elementoArrastrado.style.position || '',
+    left:     elementoArrastrado.style.left     || '',
+    top:      elementoArrastrado.style.top      || '',
+    zIndex:   elementoArrastrado.style.zIndex   || '',
+    pointerEvents: elementoArrastrado.style.pointerEvents || ''
+  };
   elementoArrastrado.classList.add('arrastrando');
   elementoArrastrado.style.position = 'fixed';
   elementoArrastrado.style.zIndex = '1000';
@@ -860,7 +868,13 @@ function soltar(e) {
   document.removeEventListener('mousemove', arrastrar);
   document.removeEventListener('mouseup', soltar);
   if (!elementoArrastrado) return;
-  elementoArrastrado.style.cssText = '';
+  // Restaurar solo los estilos de posicionamiento, no borrar todo
+  const orig = elementoArrastrado._estilosOriginales || {};
+  elementoArrastrado.style.position     = orig.position     || '';
+  elementoArrastrado.style.left         = orig.left         || '';
+  elementoArrastrado.style.top          = orig.top          || '';
+  elementoArrastrado.style.zIndex       = orig.zIndex       || '';
+  elementoArrastrado.style.pointerEvents = orig.pointerEvents || '';
   elementoArrastrado.classList.remove('arrastrando');
   document.querySelectorAll('.caja-pizza,.bowl').forEach(function(z) { z.style.outline = 'none'; });
   if (zonaDestino) {
