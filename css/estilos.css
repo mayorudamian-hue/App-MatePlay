@@ -186,16 +186,12 @@ button.secundario:active {
 .porcion:active { cursor: grabbing; transform: scale(0.9) rotate(45deg); box-shadow: 1px 1px 0 #d35400; }
 
 .arrastrando {
-  opacity: 0.95 !important;
-  box-shadow: 0 25px 40px rgba(0,0,0,0.4), 0 0 20px rgba(255, 165, 0, 0.5) !important;
+  opacity: 0.97 !important;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.35), 0 0 25px rgba(255, 165, 0, 0.6) !important;
+  transform: scale(1.2) rotate(15deg) !important;
   cursor: grabbing !important;
-  animation: arrastre-wiggle 0.5s ease-in-out infinite alternate !important;
   z-index: 9999 !important;
-}
-
-@keyframes arrastre-wiggle {
-  0% { transform: scale(1.25) rotate(10deg); }
-  100% { transform: scale(1.25) rotate(25deg); }
+  filter: brightness(1.1) !important;
 }
 
 /* Tetris */

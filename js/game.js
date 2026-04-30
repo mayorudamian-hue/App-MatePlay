@@ -198,16 +198,16 @@ async function cargarJuego(tipoJuego) {
 
     const pool = tipoJuego === 'pizza_rush' ? data.pedidos : 
                  tipoJuego === 'tetris' ? data.fichas : 
-                 tipoJuego === 'porcentajes' ? data.ejercicios :
-                 tipoJuego === 'arquitecto' ? data.ejercicios :
-                 tipoJuego === 'ascensor_extremo' ? data.ejercicios :
-                 tipoJuego === 'clima_loco' ? data.ejercicios :
-                 tipoJuego === 'saldo_inteligente' ? data.ejercicios :
-                 tipoJuego === 'zona_impacto' ? data.ejercicios :
-                 data.recetas;
+                 tipoJuego === 'chef_fraccion' ? data.recetas :
+                 data.ejercicios;
 
     const ejerciciosFiltrados = pool
       .filter(e => e.curso_minimo === cursoSeleccionado)
+      .filter(e => {
+        // Para arquitecto, solo incluir items con el formato correcto (parte_fraccion + correcta_idx)
+        if (tipoJuego === 'arquitecto') return e.parte_fraccion !== undefined && e.correcta_idx !== undefined;
+        return true;
+      })
       .sort(() => Math.random() - 0.5)
       .slice(0, 10);
 
@@ -337,6 +337,136 @@ window.eliminarRegistro = function(key, idx) {
   } catch(e) {}
 };
 
+// ── Sistema de XP y Logros ────────────────────────────────────
+const NIVELES_XP = [
+  { nivel: 1,  nombre: 'Aprendiz',       xpMin: 0,    emoji: '🌱' },
+  { nivel: 2,  nombre: 'Explorador',     xpMin: 100,  emoji: '🔭' },
+  { nivel: 3,  nombre: 'Calculador',     xpMin: 250,  emoji: '🧮' },
+  { nivel: 4,  nombre: 'Fraccionista',   xpMin: 500,  emoji: '🍕' },
+  { nivel: 5,  nombre: 'Algebrista',     xpMin: 800,  emoji: '📐' },
+  { nivel: 6,  nombre: 'Estratega',      xpMin: 1200, emoji: '♟️' },
+  { nivel: 7,  nombre: 'Matemático',     xpMin: 1700, emoji: '📚' },
+  { nivel: 8,  nombre: 'Genio',          xpMin: 2300, emoji: '🧠' },
+  { nivel: 9,  nombre: 'Maestro',        xpMin: 3000, emoji: '🏆' },
+  { nivel: 10, nombre: 'Leyenda',        xpMin: 4000, emoji: '⭐' }
+];
+
+const DEFINICION_LOGROS = [
+  { id: 'primer_juego',   emoji: '🎮', nombre: 'Primera Misión',        desc: 'Completá tu primer juego', tipo: 'partidas', umbral: 1 },
+  { id: 'xp_100',        emoji: '💪', nombre: 'Despegando',             desc: 'Alcanzá 100 XP totales', tipo: 'xp', umbral: 100 },
+  { id: 'xp_250',        emoji: '🔥', nombre: 'En Llamas',             desc: 'Alcanzá 250 XP totales', tipo: 'xp', umbral: 250 },
+  { id: 'xp_500',        emoji: '⚡', nombre: 'Energía Pura',          desc: 'Alcanzá 500 XP totales', tipo: 'xp', umbral: 500 },
+  { id: 'xp_1000',       emoji: '💎', nombre: 'Diamante Bruto',         desc: 'Alcanzá 1000 XP totales', tipo: 'xp', umbral: 1000 },
+  { id: 'xp_2000',       emoji: '🌟', nombre: 'Supernova',             desc: 'Alcanzá 2000 XP totales', tipo: 'xp', umbral: 2000 },
+  { id: 'nota_10',       emoji: '🎯', nombre: 'Tiro Perfecto',         desc: 'Sacate un 10 en cualquier juego', tipo: 'nota_perfecta', umbral: 1 },
+  { id: 'nota_10_x3',    emoji: '🎯🎯🎯', nombre: 'Triple 10',        desc: 'Sacate un 10 tres veces', tipo: 'nota_perfecta', umbral: 3 },
+  { id: 'sin_errores',   emoji: '✨', nombre: 'Impecable',             desc: 'Terminá un juego sin ningún error', tipo: 'sin_errores', umbral: 1 },
+  { id: 'racha_3',       emoji: '🔥', nombre: 'En Racha',              desc: 'Jugá 3 partidas seguidas (en sesión)', tipo: 'partidas_sesion', umbral: 3 },
+  { id: 'partidas_10',   emoji: '🏅', nombre: 'Veterano',              desc: 'Completá 10 partidas en total', tipo: 'partidas', umbral: 10 },
+  { id: 'partidas_25',   emoji: '🥇', nombre: 'Héroe MatePlay',        desc: 'Completá 25 partidas en total', tipo: 'partidas', umbral: 25 },
+  { id: 'todos_fracs',   emoji: '🍕', nombre: 'Rey de Fracciones',     desc: 'Jugá todos los juegos del Módulo Fracciones', tipo: 'modulo_fracciones', umbral: 1 },
+  { id: 'todos_enteros', emoji: '🔢', nombre: 'Rey de Enteros',        desc: 'Jugá todos los juegos del Módulo Enteros', tipo: 'modulo_enteros', umbral: 1 },
+  { id: 'maestro',       emoji: '👑', nombre: 'Gran Maestro MatePlay', desc: 'Jugá TODOS los juegos de la app', tipo: 'todos_juegos', umbral: 1 }
+];
+
+const JUEGOS_FRACCIONES = ['pizza_rush', 'tetris', 'arquitecto', 'porcentajes', 'chef_fraccion', 'combinados_fracciones'];
+const JUEGOS_ENTEROS = ['ascensor_extremo', 'clima_loco', 'saldo_inteligente', 'zona_impacto', 'combinados_enteros'];
+
+function xpKey() { return `xp_${nombreAlumno}_${cursoSeleccionado}`; }
+function logrosKey() { return `logros2_${nombreAlumno}_${cursoSeleccionado}`; }
+function partidasKey() { return `partidas_${nombreAlumno}_${cursoSeleccionado}`; }
+
+function getXPData() {
+  return JSON.parse(localStorage.getItem(xpKey())) || { total: 0, notasPerfectas: 0, sinErrores: 0 };
+}
+function getLogrosDesbloqueados() {
+  return JSON.parse(localStorage.getItem(logrosKey())) || [];
+}
+function getPartidas() {
+  return JSON.parse(localStorage.getItem(partidasKey())) || { total: 0, jugados: [] };
+}
+
+function calcularNivel(xp) {
+  let nivelActual = NIVELES_XP[0];
+  for (const n of NIVELES_XP) { if (xp >= n.xpMin) nivelActual = n; }
+  return nivelActual;
+}
+function calcularProgresoNivel(xp) {
+  const nivelActual = calcularNivel(xp);
+  const idx = NIVELES_XP.indexOf(nivelActual);
+  const siguiente = NIVELES_XP[idx + 1];
+  if (!siguiente) return { pct: 100, xpEnNivel: xp - nivelActual.xpMin, xpParaSiguiente: 0 };
+  const xpEnNivel = xp - nivelActual.xpMin;
+  const xpParaSiguiente = siguiente.xpMin - nivelActual.xpMin;
+  return { pct: Math.round((xpEnNivel / xpParaSiguiente) * 100), xpEnNivel, xpParaSiguiente };
+}
+
+function ganarXP(juego, notaNum, totalErrores, puntaje) {
+  const xpData = getXPData();
+  const partidas = getPartidas();
+  const logrosAnteriores = getLogrosDesbloqueados();
+
+  // Calcular XP ganada en esta partida
+  let xpGanada = 10; // base por completar
+  xpGanada += Math.round(notaNum * 5); // hasta 50 XP por nota (10 * 5)
+  if (totalErrores === 0) xpGanada += 20; // bonus sin errores
+  if (notaNum >= 9) xpGanada += 15; // bonus nota alta
+  xpGanada += Math.min(20, Math.round(puntaje / 10)); // hasta 20 XP extra por puntaje
+
+  const xpAnterior = xpData.total;
+  xpData.total += xpGanada;
+  if (notaNum >= 9.9) xpData.notasPerfectas = (xpData.notasPerfectas || 0) + 1;
+  if (totalErrores === 0) xpData.sinErrores = (xpData.sinErrores || 0) + 1;
+  localStorage.setItem(xpKey(), JSON.stringify(xpData));
+
+  // Registrar partida
+  partidas.total = (partidas.total || 0) + 1;
+  if (!partidas.jugados.includes(juego)) partidas.jugados.push(juego);
+  // Racha de sesión
+  const ahora = Date.now();
+  const ultima = partidas.ultimaPartida || 0;
+  const esMismaSesion = (ahora - ultima) < 30 * 60 * 1000; // 30 min
+  partidas.rachaSession = esMismaSesion ? (partidas.rachaSession || 0) + 1 : 1;
+  partidas.ultimaPartida = ahora;
+  localStorage.setItem(partidasKey(), JSON.stringify(partidas));
+
+  // Evaluar logros
+  const nuevosLogros = [];
+  for (const logro of DEFINICION_LOGROS) {
+    if (logrosAnteriores.includes(logro.id)) continue;
+    let desbloqueado = false;
+    if      (logro.tipo === 'xp'             && xpData.total >= logro.umbral) desbloqueado = true;
+    else if (logro.tipo === 'partidas'       && partidas.total >= logro.umbral) desbloqueado = true;
+    else if (logro.tipo === 'nota_perfecta'  && xpData.notasPerfectas >= logro.umbral) desbloqueado = true;
+    else if (logro.tipo === 'sin_errores'    && xpData.sinErrores >= logro.umbral) desbloqueado = true;
+    else if (logro.tipo === 'partidas_sesion'&& partidas.rachaSession >= logro.umbral) desbloqueado = true;
+    else if (logro.tipo === 'modulo_fracciones' && JUEGOS_FRACCIONES.every(j => partidas.jugados.includes(j))) desbloqueado = true;
+    else if (logro.tipo === 'modulo_enteros'    && JUEGOS_ENTEROS.every(j => partidas.jugados.includes(j))) desbloqueado = true;
+    else if (logro.tipo === 'todos_juegos'   && [...JUEGOS_FRACCIONES, ...JUEGOS_ENTEROS].every(j => partidas.jugados.includes(j))) desbloqueado = true;
+    if (desbloqueado) nuevosLogros.push(logro.id);
+  }
+  if (nuevosLogros.length > 0) {
+    const actualizados = [...logrosAnteriores, ...nuevosLogros];
+    localStorage.setItem(logrosKey(), JSON.stringify(actualizados));
+    nuevosLogros.forEach((id, i) => {
+      const l = DEFINICION_LOGROS.find(x => x.id === id);
+      setTimeout(() => mostrarMensaje(`${l.emoji} ¡Logro desbloqueado: ${l.nombre}!`, 'exito'), i * 2500);
+    });
+  }
+
+  const nivelAnterior = calcularNivel(xpAnterior);
+  const nivelNuevo = calcularNivel(xpData.total);
+  const subiNivel = nivelNuevo.nivel > nivelAnterior.nivel;
+  if (subiNivel) {
+    setTimeout(() => {
+      lanzarConfeti();
+      mostrarMensaje(`🆙 ¡SUBISTE AL NIVEL ${nivelNuevo.nivel}: ${nivelNuevo.emoji} ${nivelNuevo.nombre}!`, 'exito');
+    }, 1500);
+  }
+
+  return { xpGanada, xpTotal: xpData.total, nivel: nivelNuevo, subiNivel };
+}
+
 window.verLogros = function() {
   const container = document.getElementById('logros-container');
   const contenido = document.getElementById('contenido-logros');
@@ -344,30 +474,39 @@ window.verLogros = function() {
   history.pushState({ view: 'logros' }, '');
   container.classList.remove('oculto');
 
-  const key = `logros_${nombreAlumno}_${cursoSeleccionado}`;
-  const completados = JSON.parse(localStorage.getItem(key)) || [];
-  const juegos = [
-    { id: 'pizza_rush', n: 'Pizza Express: ¡Súper Reparto!', i: '🍕' },
-    { id: 'equivalencia_tetris', n: 'Tetris Galáctico: Alianza de Fracciones', i: '🧩' },
-    { id: 'arquitecto', n: 'Arquitecto Supremo: ¡Crea tu Mundo!', i: '📏' },
-    { id: 'porcentajes', n: 'Radar de Porcentajes: El Círculo Mágico', i: '📊' },
-    { id: 'chef_fraccion', n: 'Super Chef: Sabores Fraccionados', i: '👨‍🍳' },
-    { id: 'ascensor_extremo', n: 'Rascacielos Extremo: ¡Ascensor al Infinito!', i: '🛗' },
-    { id: 'clima_loco', n: 'Héroe del Clima: Desafío Térmico', i: '🌡️' },
-    { id: 'saldo_inteligente', n: 'Magnate de la Isla: ¡Cuentas Millonarias!', i: '💳' },
-    { id: 'zona_impacto', n: 'Zona de Impacto: El Poder de los Signos', i: '💥' }
-  ];
+  const xpData = getXPData();
+  const nivel = calcularNivel(xpData.total);
+  const progreso = calcularProgresoNivel(xpData.total);
+  const logrosDesbloqueados = getLogrosDesbloqueados();
+  const partidas = getPartidas();
 
-  const esMaestro = completados.length === juegos.length;
-  let html = esMaestro ? `<div class="maestro-banner">🏆 ¡MAESTRO MATEPLAY: ${cursoSeleccionado}! 🏆</div>` : '';
+  const xpBarColor = nivel.nivel >= 8 ? 'linear-gradient(90deg,#f1c40f,#e67e22)' :
+                     nivel.nivel >= 5 ? 'linear-gradient(90deg,#3498db,#9b59b6)' :
+                     'linear-gradient(90deg,#2ecc71,#1abc9c)';
 
-  html += juegos.map(j => {
-    const ok = completados.includes(j.id);
-    return `<div class="logro-item ${ok?'completado':''}">
-      <span class="logro-icon">${j.i}</span>
-      <div class="logro-info">
-        <strong>${j.n}</strong><br>
-        <small>${ok ? '¡Completado!' : 'Pendiente'}</small>
+  let html = `
+    <div style="background:linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,255,255,0.6));border-radius:20px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.08);border:2px solid rgba(255,255,255,0.9);">
+      <div style="font-size:3.5rem;line-height:1;margin-bottom:6px;">${nivel.emoji}</div>
+      <div style="font-size:1.5rem;font-weight:900;color:#2c3e50;">Nivel ${nivel.nivel}: ${nivel.nombre}</div>
+      <div style="font-size:0.9rem;color:#7f8c8d;margin:4px 0 14px;">⭐ ${xpData.total} XP totales · ${partidas.total} partidas</div>
+      <div style="background:rgba(0,0,0,0.08);border-radius:10px;height:14px;overflow:hidden;margin-bottom:6px;">
+        <div style="height:100%;border-radius:10px;background:${xpBarColor};width:${progreso.pct}%;transition:width 1s ease;"></div>
+      </div>
+      ${ progreso.xpParaSiguiente > 0
+        ? `<div style="font-size:0.8rem;color:#95a5a6;">${progreso.xpEnNivel} / ${progreso.xpParaSiguiente} XP para nivel ${nivel.nivel+1}</div>`
+        : `<div style="font-size:0.85rem;color:#f1c40f;font-weight:800;">👑 ¡Nivel máximo alcanzado!</div>`
+      }
+    </div>
+    <h3 style="font-weight:800;font-size:1rem;color:#7f8c8d;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">🏅 Logros (${logrosDesbloqueados.length}/${DEFINICION_LOGROS.length})</h3>
+  `;
+
+  html += DEFINICION_LOGROS.map(logro => {
+    const ok = logrosDesbloqueados.includes(logro.id);
+    return `<div class="logro-item ${ok ? 'completado' : ''}">
+      <span class="logro-icon" style="font-size:1.6rem;">${logro.emoji}</span>
+      <div style="flex:1;">
+        <strong style="font-size:0.95rem;">${logro.nombre}</strong><br>
+        <small style="color:#95a5a6;">${logro.desc}</small>
       </div>
       <span class="logro-check">${ok ? '✅' : '🔒'}</span>
     </div>`;
@@ -377,19 +516,22 @@ window.verLogros = function() {
 };
 
 function registrarCompletitud(juegoId, curso, nombre) {
+  // Compatibilidad con sistema anterior
   const key = `logros_${nombre}_${curso}`;
   let completados = JSON.parse(localStorage.getItem(key)) || [];
   if (!completados.includes(juegoId)) {
     completados.push(juegoId);
     localStorage.setItem(key, JSON.stringify(completados));
-    if (completados.length === 9) mostrarMensaje(`¡NUEVO LOGRO: Maestro MatePlay de ${curso}! 🏆`, 'exito');
   }
 }
 
 window.resetearTodo = function() {
   if (confirm('¿Borrar todo el historial y reiniciar para un nuevo curso?')) {
     Object.keys(localStorage).forEach(key => {
-      if (key.startsWith('ranking_') || key.startsWith('logros_')) localStorage.removeItem(key);
+      if (key.startsWith('ranking_') || key.startsWith('logros_') || 
+          key.startsWith('logros2_') || key.startsWith('xp_') || key.startsWith('partidas_')) {
+        localStorage.removeItem(key);
+      }
     });
     document.getElementById('input-nombre-menu').value = '';
     document.getElementById('select-curso').value = '';
@@ -562,12 +704,38 @@ function mostrarPantallaFinal(contenedor, juego, curso, puntaje, aciertos, total
     '</div>';
   }
 
+  // Ganar XP y evaluar logros
+  const totalErrores2 = Object.values(erroresPorTema).reduce((a, b) => a + b, 0);
+  const xpResult = ganarXP(juego, parseFloat(nota), totalErrores2, puntaje);
+
+  const xpProgressColor = xpResult.nivel.nivel >= 8
+    ? 'linear-gradient(90deg,#f1c40f,#e67e22)'
+    : xpResult.nivel.nivel >= 5
+    ? 'linear-gradient(90deg,#3498db,#9b59b6)'
+    : 'linear-gradient(90deg,#2ecc71,#1abc9c)';
+  const progresoXP = calcularProgresoNivel(xpResult.xpTotal);
+
+  const xpBannerHTML = `
+    <div style="background:linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,255,255,0.6));border-radius:16px;padding:16px;margin-bottom:20px;border:2px solid rgba(255,255,255,0.9);box-shadow:0 8px 20px rgba(0,0,0,0.06);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <span style="font-size:2rem;">${xpResult.nivel.emoji}</span>
+        <div>
+          <div style="font-weight:900;font-size:1rem;color:#2c3e50;">Nv.${xpResult.nivel.nivel} ${xpResult.nivel.nombre}</div>
+          <div style="font-size:0.8rem;color:#27ae60;font-weight:700;">+${xpResult.xpGanada} XP ganados · Total: ${xpResult.xpTotal} XP</div>
+        </div>
+      </div>
+      <div style="background:rgba(0,0,0,0.08);border-radius:8px;height:10px;overflow:hidden;">
+        <div style="height:100%;border-radius:8px;background:${xpProgressColor};width:${progresoXP.pct}%;"></div>
+      </div>
+      <div style="font-size:0.75rem;color:#95a5a6;margin-top:4px;text-align:right;">${progresoXP.xpParaSiguiente > 0 ? progresoXP.xpEnNivel+'/'+progresoXP.xpParaSiguiente+' XP para siguiente nivel' : '👑 Nivel máximo'}</div>
+    </div>`;
+
   contenedor.innerHTML =
     '<div style="text-align:center;padding:8px;">' +
       '<div style="font-size:3rem;margin-bottom:8px;">' + estrella + '</div>' +
       '<h2 style="color:#2c3e50;margin-bottom:4px;">¡Evaluación terminada, ' + nombreAlumno + '!</h2>' +
       '<p style="color:#7f8c8d;margin-bottom:16px;">' + aciertos + ' de ' + total + ' correctas · ' + porcentaje + '%</p>' +
-      '<div style="display:flex; gap:10px; margin-bottom:20px;">' +
+      '<div style="display:flex; gap:10px; margin-bottom:16px;">' +
         '<div style="flex:1; background:var(--azul); border-radius:16px; padding:15px; color:white;">' +
           '<div style="font-size:0.8rem;opacity:0.85;">Nota</div>' +
           '<div class="' + notaAnim + '" style="font-size:2.2rem;font-weight:700;">' + nota + '</div>' +
@@ -577,6 +745,7 @@ function mostrarPantallaFinal(contenedor, juego, curso, puntaje, aciertos, total
           '<div style="font-size:2.2rem;font-weight:700;">' + puntaje + '</div>' +
         '</div>' +
       '</div>' +
+      xpBannerHTML +
       resumenHTML +
       '<div id="tabla-ranking">' + htmlRanking(juego, curso) + '</div>' +
       '<button onclick="volverMenu()" style="margin-top:16px;" class="secundario">← Menu</button>' +
