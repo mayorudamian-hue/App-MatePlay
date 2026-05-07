@@ -153,6 +153,74 @@ function validarMenu() {
   const listo = cursoSeleccionado && nombreAlumno.length >= 2;
   document.querySelectorAll('#menu button[onclick^="cargarJuego"]').forEach(btn => btn.disabled = !listo);
   if (document.getElementById('btn-logros')) document.getElementById('btn-logros').disabled = !listo;
+
+  const perfilResumen = document.getElementById('perfil-resumen');
+  if (perfilResumen) {
+    if (listo) {
+      const xpData = getXPData();
+      const nivel = calcularNivel(xpData.total);
+      const progreso = calcularProgresoNivel(xpData.total);
+      const racha = getRachaData();
+      
+      const xpBarColor = nivel.nivel >= 8 ? 'linear-gradient(90deg,#f1c40f,#e67e22)' :
+                         nivel.nivel >= 5 ? 'linear-gradient(90deg,#3498db,#9b59b6)' :
+                         'linear-gradient(90deg,#2ecc71,#1abc9c)';
+                         
+      perfilResumen.innerHTML = `
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="font-size:2.5rem; line-height:1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">${nivel.emoji}</div>
+          <div style="flex:1;">
+            <div style="font-weight:900; font-size:1.05rem; color:#2c3e50; margin-bottom:2px;">Nv. ${nivel.nivel}: ${nivel.nombre}</div>
+            <div style="font-size:0.85rem; color:#7f8c8d; font-weight:600; display:flex; justify-content:space-between;">
+              <span>⭐ ${xpData.total} XP Total</span>
+              <span style="color:#e67e22; font-weight:800;">🔥 Racha: ${racha.dias}</span>
+            </div>
+            <div style="background:rgba(0,0,0,0.06); border-radius:10px; height:8px; overflow:hidden; margin-top:6px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
+              <div style="height:100%; background:${xpBarColor}; width:${progreso.pct}%; transition:width 1s ease;"></div>
+            </div>
+            ${ progreso.xpParaSiguiente > 0 
+              ? `<div style="font-size:0.75rem; color:#95a5a6; margin-top:4px;">${progreso.xpEnNivel} / ${progreso.xpParaSiguiente} XP para el próximo nivel</div>` 
+              : `<div style="font-size:0.75rem; color:#f39c12; margin-top:4px; font-weight:bold;">¡Nivel Máximo!</div>` 
+            }
+          </div>
+        </div>
+      `;
+      perfilResumen.classList.remove('oculto');
+      
+      const misionesCont = document.getElementById('misiones-diarias');
+      if (misionesCont) {
+        const mData = getMisionesDiarias();
+        let misionesHtml = `<h3 style="font-size:0.9rem; color:#7f8c8d; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px; text-align:center;">🎯 Misiones Diarias</h3>`;
+        misionesHtml += `<div style="display:flex; flex-direction:column; gap:8px;">`;
+        mData.misiones.forEach(m => {
+          const progresoPct = Math.min(100, Math.round((m.progreso / m.meta) * 100));
+          misionesHtml += `
+            <div style="background:${m.completada ? '#f0fdf4' : '#f8f9fa'}; border:1px solid ${m.completada ? '#86efac' : '#e2e8f0'}; border-radius:8px; padding:10px; position:relative; overflow:hidden;">
+              <div style="display:flex; justify-content:space-between; align-items:center; position:relative; z-index:2;">
+                <div>
+                  <div style="font-weight:700; font-size:0.9rem; color:${m.completada ? '#166534' : '#334155'};">${m.desc}</div>
+                  <div style="font-size:0.75rem; color:#64748b;">Recompensa: <span style="color:#f59e0b; font-weight:800;">+${m.xp} XP</span></div>
+                </div>
+                <div style="font-size:1.5rem;">${m.completada ? '✅' : '⏳'}</div>
+              </div>
+              ${!m.completada ? `
+              <div style="position:absolute; bottom:0; left:0; width:100%; height:4px; background:#e2e8f0;">
+                <div style="height:100%; background:#3b82f6; width:${progresoPct}%; transition:width 0.5s ease;"></div>
+              </div>` : ''}
+            </div>
+          `;
+        });
+        misionesHtml += `</div>`;
+        misionesCont.innerHTML = misionesHtml;
+        misionesCont.classList.remove('oculto');
+      }
+
+    } else {
+      perfilResumen.classList.add('oculto');
+      const misionesCont = document.getElementById('misiones-diarias');
+      if (misionesCont) misionesCont.classList.add('oculto');
+    }
+  }
 }
 
 document.getElementById('select-curso').addEventListener('change', (e) => {
@@ -337,6 +405,100 @@ window.eliminarRegistro = function(key, idx) {
   } catch(e) {}
 };
 
+// ── Misiones y Rachas Diarias ───────────────────────────────────
+function getFechaHoy() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function getRachaData() {
+  const key = `racha_${nombreAlumno}_${cursoSeleccionado}`;
+  return JSON.parse(localStorage.getItem(key)) || { dias: 0, ultimaFecha: null };
+}
+
+function actualizarRachaAlJugar() {
+  const key = `racha_${nombreAlumno}_${cursoSeleccionado}`;
+  const racha = getRachaData();
+  const hoy = getFechaHoy();
+  if (racha.ultimaFecha === hoy) return racha; // Ya sumó hoy
+  
+  const ayer = new Date();
+  ayer.setDate(ayer.getDate() - 1);
+  const ayerStr = `${ayer.getFullYear()}-${String(ayer.getMonth()+1).padStart(2,'0')}-${String(ayer.getDate()).padStart(2,'0')}`;
+
+  if (racha.ultimaFecha === ayerStr) {
+    racha.dias += 1;
+  } else {
+    racha.dias = 1;
+  }
+  racha.ultimaFecha = hoy;
+  localStorage.setItem(key, JSON.stringify(racha));
+  
+  if (racha.dias > 1) {
+     setTimeout(() => mostrarMensaje(`🔥 ¡Racha de ${racha.dias} días seguidos!`, 'exito'), 1000);
+  }
+  return racha;
+}
+
+const BANCO_MISIONES = [
+  { id: 'jugar_2', desc: 'Juega 2 partidas', tipo: 'partidas', meta: 2, xp: 50 },
+  { id: 'jugar_4', desc: 'Juega 4 partidas', tipo: 'partidas', meta: 4, xp: 100 },
+  { id: 'ganar_xp_100', desc: 'Gana 100 XP hoy', tipo: 'ganar_xp', meta: 100, xp: 50 },
+  { id: 'ganar_xp_200', desc: 'Gana 200 XP hoy', tipo: 'ganar_xp', meta: 200, xp: 100 },
+  { id: 'sacar_10', desc: 'Saca una nota de 10', tipo: 'nota_10', meta: 1, xp: 75 },
+  { id: 'cero_errores', desc: 'Gana sin errores', tipo: 'sin_errores', meta: 1, xp: 75 },
+  { id: 'jugar_fracciones', desc: 'Juega Fracciones', tipo: 'juego_fracciones', meta: 1, xp: 40 },
+  { id: 'jugar_enteros', desc: 'Juega Enteros', tipo: 'juego_enteros', meta: 1, xp: 40 }
+];
+
+function getMisionesDiarias() {
+  const key = `misiones_${nombreAlumno}_${cursoSeleccionado}`;
+  let data = JSON.parse(localStorage.getItem(key));
+  const hoy = getFechaHoy();
+  
+  if (!data || data.fecha !== hoy) {
+    const mezcladas = [...BANCO_MISIONES].sort(() => Math.random() - 0.5).slice(0, 3);
+    const misiones = mezcladas.map(m => ({ ...m, progreso: 0, completada: false }));
+    data = { fecha: hoy, misiones };
+    localStorage.setItem(key, JSON.stringify(data));
+  }
+  return data;
+}
+
+function procesarMisionesTerminadas(tipo_juego, nota, xpGanada, errores) {
+  const data = getMisionesDiarias();
+  let actualizo = false;
+  let xpMisiones = 0;
+  
+  data.misiones.forEach(m => {
+    if (m.completada) return;
+    
+    let avance = 0;
+    if (m.tipo === 'partidas') avance = 1;
+    if (m.tipo === 'ganar_xp') avance = xpGanada;
+    if (m.tipo === 'nota_10' && nota >= 9.9) avance = 1;
+    if (m.tipo === 'sin_errores' && errores === 0) avance = 1;
+    if (m.tipo === 'juego_fracciones' && typeof JUEGOS_FRACCIONES !== 'undefined' && JUEGOS_FRACCIONES.includes(tipo_juego)) avance = 1;
+    if (m.tipo === 'juego_enteros' && typeof JUEGOS_ENTEROS !== 'undefined' && JUEGOS_ENTEROS.includes(tipo_juego)) avance = 1;
+
+    if (avance > 0) {
+      m.progreso += avance;
+      actualizo = true;
+      if (m.progreso >= m.meta) {
+        m.progreso = m.meta;
+        m.completada = true;
+        xpMisiones += m.xp;
+        setTimeout(() => mostrarMensaje(`🎯 Misión cumplida: ${m.desc} (+${m.xp} XP)`, 'exito'), 2500);
+      }
+    }
+  });
+
+  if (actualizo) {
+    localStorage.setItem(`misiones_${nombreAlumno}_${cursoSeleccionado}`, JSON.stringify(data));
+  }
+  return xpMisiones;
+}
+
 // ── Sistema de XP y Logros ────────────────────────────────────
 const NIVELES_XP = [
   { nivel: 1,  nombre: 'Aprendiz',       xpMin: 0,    emoji: '🌱' },
@@ -418,6 +580,15 @@ function ganarXP(juego, notaNum, totalErrores, puntaje) {
   if (notaNum >= 9.9) xpData.notasPerfectas = (xpData.notasPerfectas || 0) + 1;
   if (totalErrores === 0) xpData.sinErrores = (xpData.sinErrores || 0) + 1;
   localStorage.setItem(xpKey(), JSON.stringify(xpData));
+
+  // Actualizar Rachas y Misiones
+  actualizarRachaAlJugar();
+  const xpExtraMisiones = procesarMisionesTerminadas(juego, notaNum, xpGanada, totalErrores);
+  if (xpExtraMisiones > 0) {
+    xpData.total += xpExtraMisiones;
+    xpGanada += xpExtraMisiones;
+    localStorage.setItem(xpKey(), JSON.stringify(xpData));
+  }
 
   // Registrar partida
   partidas.total = (partidas.total || 0) + 1;
@@ -555,6 +726,7 @@ function volverMenu() {
     document.getElementById('contenido-juego').innerHTML = '';
     comboActual = 0;
     clearInterval(window.timerID);
+    validarMenu();
   }
 }
 
@@ -579,6 +751,7 @@ window.addEventListener('popstate', () => {
   document.getElementById('contenido-juego').innerHTML = '';
   comboActual = 0;
   clearInterval(window.timerID);
+  validarMenu();
 });
 
 // ── Matemática de fracciones ───────────────────────────────────
