@@ -64,15 +64,24 @@ const mp_init = () => {
     }
   });
 
-  // Cargar nombre guardado del alumno si existe
+  // Cargar nombre y curso guardados para auto-login
   const nombreGuardado = localStorage.getItem('mateplay_nombre');
-  if (nombreGuardado) {
-    const inputNombre = document.getElementById('input-nombre-menu');
-    if (inputNombre) {
-      inputNombre.value = nombreGuardado;
-      validarMenu(); // Actualiza la variable global y el estado de los botones
-    }
+  const cursoGuardado = localStorage.getItem('mateplay_curso');
+  const loginInput = document.getElementById('input-nombre-login');
+  const loginSelect = document.getElementById('select-curso-login');
+
+  if (loginInput && nombreGuardado) loginInput.value = nombreGuardado;
+  if (loginSelect && cursoGuardado) loginSelect.value = cursoGuardado;
+
+  // Si ya hay datos guardados válidos, entrar automáticamente
+  if (nombreGuardado && nombreGuardado.trim().length >= 2 && cursoGuardado) {
+    nombreAlumno = nombreGuardado.trim();
+    cursoSeleccionado = cursoGuardado;
+    mostrarMenuPrincipal();
   }
+
+  // Validar botón de ingresar en el login
+  validarLoginBtn();
 };
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mp_init);
 else mp_init();
@@ -147,12 +156,84 @@ function mostrarBannerInstalacion() {
   });
 }
 
+// ── Validación del botón de login ──
+function validarLoginBtn() {
+  const inp = document.getElementById('input-nombre-login');
+  const sel = document.getElementById('select-curso-login');
+  const btn = document.getElementById('btn-ingresar');
+  if (inp && sel && btn) {
+    btn.disabled = !(inp.value.trim().length >= 2 && sel.value);
+  }
+}
+
+document.getElementById('input-nombre-login').addEventListener('input', validarLoginBtn);
+document.getElementById('input-nombre-login').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') window.ingresarApp();
+});
+document.getElementById('select-curso-login').addEventListener('change', validarLoginBtn);
+
+// ── Ingresar a la App ──
+window.ingresarApp = function() {
+  const inp = document.getElementById('input-nombre-login');
+  const sel = document.getElementById('select-curso-login');
+  if (!inp || !sel) return;
+  const nombre = inp.value.trim();
+  const curso = sel.value;
+  if (nombre.length < 2 || !curso) {
+    mostrarMensaje('Completá tu nombre y curso para ingresar.', 'error');
+    return;
+  }
+  nombreAlumno = nombre;
+  cursoSeleccionado = curso;
+  localStorage.setItem('mateplay_nombre', nombreAlumno);
+  localStorage.setItem('mateplay_curso', cursoSeleccionado);
+  mostrarMenuPrincipal();
+};
+
+function mostrarMenuPrincipal() {
+  const login = document.getElementById('login-container');
+  const menu = document.getElementById('menu');
+  if (login) login.classList.add('oculto');
+  if (menu) menu.classList.remove('oculto');
+
+  // Actualizar la cabecera del menú
+  const dispNombre = document.getElementById('display-nombre-menu');
+  const dispCurso = document.getElementById('display-curso-menu');
+  if (dispNombre) dispNombre.textContent = nombreAlumno;
+  if (dispCurso) dispCurso.textContent = cursoSeleccionado;
+
+  validarMenu();
+}
+
+// ── Salir al login ──
+window.salirLogin = function() {
+  nombreAlumno = '';
+  cursoSeleccionado = '';
+  localStorage.removeItem('mateplay_nombre');
+  localStorage.removeItem('mateplay_curso');
+  clearInterval(window.timerID);
+
+  // Ocultar todo y mostrar login
+  document.getElementById('menu').classList.add('oculto');
+  document.getElementById('juego-container').classList.add('oculto');
+  document.getElementById('logros-container').classList.add('oculto');
+  document.getElementById('panel-docente-container').classList.add('oculto');
+  const tienda = document.getElementById('tienda-container');
+  if (tienda) tienda.classList.add('oculto');
+  document.getElementById('contenido-juego').innerHTML = '';
+  comboActual = 0;
+
+  const login = document.getElementById('login-container');
+  if (login) login.classList.remove('oculto');
+  const inp = document.getElementById('input-nombre-login');
+  if (inp) { inp.value = ''; inp.focus(); }
+  const sel = document.getElementById('select-curso-login');
+  if (sel) sel.value = '';
+  validarLoginBtn();
+};
+
 function validarMenu() {
-  nombreAlumno = document.getElementById('input-nombre-menu').value.trim();
-  localStorage.setItem('mateplay_nombre', nombreAlumno); // Guardar nombre automáticamente
   const listo = cursoSeleccionado && nombreAlumno.length >= 2;
-  document.querySelectorAll('#menu button[onclick^="cargarJuego"]').forEach(btn => btn.disabled = !listo);
-  if (document.getElementById('btn-logros')) document.getElementById('btn-logros').disabled = !listo;
 
   const perfilResumen = document.getElementById('perfil-resumen');
   if (perfilResumen) {
@@ -227,13 +308,6 @@ function validarMenu() {
     }
   }
 }
-
-document.getElementById('select-curso').addEventListener('change', (e) => {
-  cursoSeleccionado = e.target.value;
-  validarMenu();
-});
-
-document.getElementById('input-nombre-menu').addEventListener('input', validarMenu);
 
 // ── Cargar juego ───────────────────────────────────────────────
 async function cargarJuego(tipoJuego) {
@@ -401,12 +475,22 @@ window.abrirPanelDocente = function() {
     contenido.innerHTML = html;
   }
 
+  const login = document.getElementById('login-container');
+  if (login) login.classList.add('oculto');
   if (menu) menu.classList.add('oculto');
   if (panel) panel.classList.remove('oculto');
 };
 
 window.cerrarPanelDocente = function() {
-  if (history.state) history.back(); else volverMenu();
+  const panel = document.getElementById('panel-docente-container');
+  if (panel) panel.classList.add('oculto');
+  // Si el usuario estaba logueado, volver al menú; si no, al login
+  if (nombreAlumno && cursoSeleccionado) {
+    document.getElementById('menu').classList.remove('oculto');
+    validarMenu();
+  } else {
+    document.getElementById('login-container').classList.remove('oculto');
+  }
 };
 
 window.eliminarRegistroDocente = function(nombre, curso) {
@@ -779,17 +863,15 @@ window.resetearTodo = function() {
   if (confirm('¿Borrar todo el historial y reiniciar para un nuevo curso?')) {
     Object.keys(localStorage).forEach(key => {
       if (key.startsWith('ranking_') || key.startsWith('logros_') || 
-          key.startsWith('logros2_') || key.startsWith('xp_') || key.startsWith('partidas_')) {
+          key.startsWith('logros2_') || key.startsWith('xp_') || key.startsWith('partidas_') ||
+          key.startsWith('racha_') || key.startsWith('misiones_') ||
+          key.startsWith('matecoins_') || key.startsWith('inventario_')) {
         localStorage.removeItem(key);
       }
     });
-    document.getElementById('input-nombre-menu').value = '';
-    document.getElementById('select-curso').value = '';
     comboActual = 0;
-    cursoSeleccionado = '';
-    nombreAlumno = '';
-    validarMenu();
     mostrarMensaje('¡Sistema reiniciado!', 'exito');
+    window.salirLogin();
   }
 };
 
@@ -798,6 +880,7 @@ function volverMenu() {
     history.back();
   } else {
     // Fallback por si se llama manualmente sin historial
+    document.getElementById('login-container').classList.add('oculto');
     document.getElementById('menu').classList.remove('oculto');
     document.getElementById('juego-container').classList.add('oculto');
     document.getElementById('logros-container').classList.add('oculto');
@@ -825,6 +908,7 @@ window.addEventListener('popstate', () => {
     }
   }
 
+  document.getElementById('login-container').classList.add('oculto');
   document.getElementById('menu').classList.remove('oculto');
   document.getElementById('juego-container').classList.add('oculto');
   document.getElementById('logros-container').classList.add('oculto');
@@ -2806,12 +2890,3 @@ window.cambiarSigno = function(id, signo) {
   el.focus();
 };
 
-window.cambiarUsuario = function() {
-  localStorage.removeItem('mateplay_nombre');
-  const inputNombre = document.getElementById('input-nombre-menu');
-  if (inputNombre) {
-    inputNombre.value = '';
-    validarMenu();
-    mostrarMensaje('Nombre borrado. ¡Ingresá uno nuevo!', 'exito');
-  }
-};
