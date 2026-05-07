@@ -2363,7 +2363,7 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
           aciertos++;
           if (tiempoExtraUsado === 0) { puntaje += 20; mostrarMensaje('¡Cuenta perfecta! +5 Bonus 💰', 'exito'); }
           else { puntaje += 15; mostrarMensaje('¡Cuenta perfecta! 💰', 'exito'); }
-        else { 
+        } else { 
           if (!window.intentarUsarEscudo()) {
             reproducirSonido('error'); 
             erroresPorTema["Ecuaciones de Saldo"] = (erroresPorTema["Ecuaciones de Saldo"] || 0) + 1; 
