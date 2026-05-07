@@ -95,6 +95,40 @@
       <div id="contenido-panel" style="margin-top: 15px;"></div>
       <button class="secundario" onclick="cerrarPanelDocente()" style="margin-top: 20px;">← Volver al menú</button>
     </div>
+    <div class="card oculto" id="tienda-container">
+      <h2 style="color:#f39c12; text-align:center;">🛒 Tienda MatePlay</h2>
+      <div id="saldo-tienda" style="text-align:center; font-size:1.2rem; font-weight:bold; margin-bottom:15px; color:#2c3e50;"></div>
+      
+      <div class="tienda-items" style="display:flex; flex-direction:column; gap:10px;">
+        <div style="border:2px solid #ecf0f1; border-radius:10px; padding:15px; display:flex; justify-content:space-between; align-items:center;">
+          <div style="flex:1;">
+            <div style="font-weight:bold; font-size:1.05rem;">⏱️ +15 Segundos Extra</div>
+            <div style="font-size:0.8rem; color:#7f8c8d; margin-top:2px;">Usa este tiempo cuando agotes el límite gratuito.</div>
+            <div style="font-size:0.85rem; color:#2c3e50; font-weight:bold; margin-top:5px;">En inventario: <span id="inv-tiempo" style="color:#27ae60;">0</span></div>
+          </div>
+          <button onclick="comprarPowerUp('tiempo', 100)" class="secundario" style="margin:0; width:auto; background:#f1c40f; color:#2c3e50; border:none; font-weight:bold; box-shadow:0 4px 0 #f39c12; padding:10px 15px;">🪙 100</button>
+        </div>
+
+        <div style="border:2px solid #ecf0f1; border-radius:10px; padding:15px; display:flex; justify-content:space-between; align-items:center;">
+          <div style="flex:1;">
+            <div style="font-weight:bold; font-size:1.05rem;">⏭️ Saltear Ejercicio</div>
+            <div style="font-size:0.8rem; color:#7f8c8d; margin-top:2px;">Pasa al siguiente ejercicio al instante.</div>
+            <div style="font-size:0.85rem; color:#2c3e50; font-weight:bold; margin-top:5px;">En inventario: <span id="inv-saltear" style="color:#27ae60;">0</span></div>
+          </div>
+          <button onclick="comprarPowerUp('saltear', 200)" class="secundario" style="margin:0; width:auto; background:#f1c40f; color:#2c3e50; border:none; font-weight:bold; box-shadow:0 4px 0 #f39c12; padding:10px 15px;">🪙 200</button>
+        </div>
+
+        <div style="border:2px solid #ecf0f1; border-radius:10px; padding:15px; display:flex; justify-content:space-between; align-items:center;">
+          <div style="flex:1;">
+            <div style="font-weight:bold; font-size:1.05rem;">🛡️ Escudo Anti-Error</div>
+            <div style="font-size:0.8rem; color:#7f8c8d; margin-top:2px;">Perdona automáticamente tu primer fallo.</div>
+            <div style="font-size:0.85rem; color:#2c3e50; font-weight:bold; margin-top:5px;">En inventario: <span id="inv-escudo" style="color:#27ae60;">0</span></div>
+          </div>
+          <button onclick="comprarPowerUp('escudo', 300)" class="secundario" style="margin:0; width:auto; background:#f1c40f; color:#2c3e50; border:none; font-weight:bold; box-shadow:0 4px 0 #f39c12; padding:10px 15px;">🪙 300</button>
+        </div>
+      </div>
+      <button class="secundario" onclick="volverMenu()" style="margin-top:20px;">← Volver al menú</button>
+    </div>
   </main>
   <script src="./js/game.js"></script>
 </body>

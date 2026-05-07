@@ -161,6 +161,7 @@ function validarMenu() {
       const nivel = calcularNivel(xpData.total);
       const progreso = calcularProgresoNivel(xpData.total);
       const racha = getRachaData();
+      const mateCoins = getMateCoins();
       
       const xpBarColor = nivel.nivel >= 8 ? 'linear-gradient(90deg,#f1c40f,#e67e22)' :
                          nivel.nivel >= 5 ? 'linear-gradient(90deg,#3498db,#9b59b6)' :
@@ -178,12 +179,16 @@ function validarMenu() {
             <div style="background:rgba(0,0,0,0.06); border-radius:10px; height:8px; overflow:hidden; margin-top:6px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
               <div style="height:100%; background:${xpBarColor}; width:${progreso.pct}%; transition:width 1s ease;"></div>
             </div>
-            ${ progreso.xpParaSiguiente > 0 
-              ? `<div style="font-size:0.75rem; color:#95a5a6; margin-top:4px;">${progreso.xpEnNivel} / ${progreso.xpParaSiguiente} XP para el próximo nivel</div>` 
-              : `<div style="font-size:0.75rem; color:#f39c12; margin-top:4px; font-weight:bold;">¡Nivel Máximo!</div>` 
-            }
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+              ${ progreso.xpParaSiguiente > 0 
+                ? `<div style="font-size:0.75rem; color:#95a5a6;">${progreso.xpEnNivel} / ${progreso.xpParaSiguiente} XP para el próximo nivel</div>` 
+                : `<div style="font-size:0.75rem; color:#f39c12; font-weight:bold;">¡Nivel Máximo!</div>` 
+              }
+              <div style="font-weight:900; color:#f39c12; font-size:0.9rem;">🪙 ${mateCoins}</div>
+            </div>
           </div>
         </div>
+        <button onclick="abrirTienda()" style="width:100%; margin-top:12px; background:#f39c12; color:white; border:none; border-radius:8px; padding:10px; font-weight:bold; cursor:pointer; font-size:0.9rem; box-shadow:0 4px 0 #d68910;">🛒 Entrar a la Tienda</button>
       `;
       perfilResumen.classList.remove('oculto');
       
@@ -499,6 +504,61 @@ function procesarMisionesTerminadas(tipo_juego, nota, xpGanada, errores) {
   return xpMisiones;
 }
 
+// ── Sistema de Tienda y Monedas ───────────────────────────────────
+function getMateCoins() {
+  const key = `matecoins_${nombreAlumno}_${cursoSeleccionado}`;
+  return JSON.parse(localStorage.getItem(key)) || 0;
+}
+function setMateCoins(m) {
+  const key = `matecoins_${nombreAlumno}_${cursoSeleccionado}`;
+  localStorage.setItem(key, JSON.stringify(m));
+}
+function getInventario() {
+  const key = `inventario_${nombreAlumno}_${cursoSeleccionado}`;
+  return JSON.parse(localStorage.getItem(key)) || { tiempo: 0, saltear: 0, escudo: 0 };
+}
+function setInventario(inv) {
+  const key = `inventario_${nombreAlumno}_${cursoSeleccionado}`;
+  localStorage.setItem(key, JSON.stringify(inv));
+}
+
+window.abrirTienda = function() {
+  const tiendaContainer = document.getElementById('tienda-container');
+  const menu = document.getElementById('menu');
+  if (!tiendaContainer || !menu) return;
+  
+  menu.classList.add('oculto');
+  tiendaContainer.classList.remove('oculto');
+  history.pushState({ view: 'tienda' }, '');
+  actualizarUITienda();
+};
+
+function actualizarUITienda() {
+  const monedas = getMateCoins();
+  const inv = getInventario();
+  document.getElementById('saldo-tienda').innerHTML = `Tienes <span style="color:#f39c12;">🪙 ${monedas} MateCoins</span>`;
+  document.getElementById('inv-tiempo').textContent = inv.tiempo;
+  document.getElementById('inv-saltear').textContent = inv.saltear;
+  document.getElementById('inv-escudo').textContent = inv.escudo;
+}
+
+window.comprarPowerUp = function(tipo, costo) {
+  let monedas = getMateCoins();
+  if (monedas >= costo) {
+    monedas -= costo;
+    setMateCoins(monedas);
+    const inv = getInventario();
+    inv[tipo]++;
+    setInventario(inv);
+    actualizarUITienda();
+    reproducirSonido('caja');
+    mostrarMensaje('¡Compra exitosa! 🎉', 'exito');
+  } else {
+    reproducirSonido('error');
+    mostrarMensaje('No tienes suficientes MateCoins 🪙', 'error');
+  }
+};
+
 // ── Sistema de XP y Logros ────────────────────────────────────
 const NIVELES_XP = [
   { nivel: 1,  nombre: 'Aprendiz',       xpMin: 0,    emoji: '🌱' },
@@ -580,6 +640,10 @@ function ganarXP(juego, notaNum, totalErrores, puntaje) {
   if (notaNum >= 9.9) xpData.notasPerfectas = (xpData.notasPerfectas || 0) + 1;
   if (totalErrores === 0) xpData.sinErrores = (xpData.sinErrores || 0) + 1;
   localStorage.setItem(xpKey(), JSON.stringify(xpData));
+
+  // Ganar MateCoins (2 Monedas por cada XP ganada)
+  let monedasGanadas = xpGanada * 2;
+  setMateCoins(getMateCoins() + monedasGanadas);
 
   // Actualizar Rachas y Misiones
   actualizarRachaAlJugar();
@@ -723,6 +787,8 @@ function volverMenu() {
     document.getElementById('juego-container').classList.add('oculto');
     document.getElementById('logros-container').classList.add('oculto');
     document.getElementById('panel-docente-container').classList.add('oculto');
+    const tienda = document.getElementById('tienda-container');
+    if (tienda) tienda.classList.add('oculto');
     document.getElementById('contenido-juego').innerHTML = '';
     comboActual = 0;
     clearInterval(window.timerID);
@@ -748,6 +814,8 @@ window.addEventListener('popstate', () => {
   document.getElementById('juego-container').classList.add('oculto');
   document.getElementById('logros-container').classList.add('oculto');
   document.getElementById('panel-docente-container').classList.add('oculto');
+  const tienda = document.getElementById('tienda-container');
+  if (tienda) tienda.classList.add('oculto');
   document.getElementById('contenido-juego').innerHTML = '';
   comboActual = 0;
   clearInterval(window.timerID);
@@ -965,26 +1033,40 @@ function iniciarCronometro(segundos, onFin) {
 
 window.agregarTiempo = function() {
   if (tiempoExtraUsado >= LIMITE_TIEMPO_EXTRA) {
-    mostrarMensaje('Máximo 2 veces por ejercicio 🛑', 'error');
-    return;
+    const inv = getInventario();
+    if (inv.tiempo > 0) {
+      inv.tiempo--;
+      setInventario(inv);
+      mostrarMensaje('¡Usaste un Power-Up de la tienda! (+15s) ⏱️', 'exito');
+    } else {
+      mostrarMensaje('Límite gratuito alcanzado. ¡Compra más tiempo en la tienda! 🛒', 'error');
+      return;
+    }
+  } else {
+    tiempoExtraUsado++;
+    mostrarMensaje('¡+15 segundos! Usos gratuitos: ' + tiempoExtraUsado + '/' + LIMITE_TIEMPO_EXTRA + ' ⏳', 'exito');
   }
 
   cronometroRestante += 15;
-  tiempoExtraUsado++;
   actualizarCronometro(cronometroRestante, cronometroTotal);
 
   trackMP('use_extra_time', { 'usos': tiempoExtraUsado });
   
   const btn = document.getElementById('btn-extra-tiempo');
   if (btn) {
-    const usosRestantes = LIMITE_TIEMPO_EXTRA - tiempoExtraUsado;
-    btn.textContent = '+15s ⏱️ (' + usosRestantes + ')';
-    if (usosRestantes === 0) {
+    const usosRestantes = Math.max(0, LIMITE_TIEMPO_EXTRA - tiempoExtraUsado);
+    const inv = getInventario();
+    if (usosRestantes > 0) {
+      btn.textContent = '+15s ⏱️ (' + usosRestantes + ')';
+    } else if (inv.tiempo > 0) {
+      btn.textContent = '+15s ⏱️ (' + inv.tiempo + ' en mochila)';
+      btn.style.background = '#8e44ad'; // Purple for premium
+    } else {
+      btn.textContent = '+15s ⏱️ (0)';
       btn.style.opacity = '0.5';
       btn.style.background = '#95a5a6';
     }
   }
-  mostrarMensaje('¡+15 segundos! Usos: ' + tiempoExtraUsado + '/' + LIMITE_TIEMPO_EXTRA + ' ⏳', 'exito');
 };
 
 // ── Arrastre (tactil y mouse) ──────────────────────────────────
