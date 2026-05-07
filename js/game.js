@@ -300,32 +300,32 @@ async function cargarJuego(tipoJuego) {
 }
 
 window.exportarCSV = function() {
-  let csv = 'Juego;Curso;Alumno;Puntaje;Nota;Fecha\n';
+  let csv = 'Alumno;Curso;XP Total;Partidas Jugadas;Notas Perfectas;Sin Errores\\n';
   let hayDatos = false;
 
   Object.keys(localStorage).forEach(key => {
-    const match = key.match(/^ranking_(.+)_([^_]+)$/);
-    if (match) {
+    const matchXp = key.match(/^xp_(.+)_([^_]+)$/);
+    if (matchXp) {
       hayDatos = true;
-      const juego = match[1].replace(/_/g, ' ').toUpperCase();
-      const curso = match[2];
+      const nombre = matchXp[1];
+      const curso = matchXp[2];
       try {
-        const data = JSON.parse(localStorage.getItem(key));
-        data.forEach(r => {
-          const notaVal = (r.nota !== undefined) ? r.nota : '-';
-          csv += juego + ';' + curso + ';' + r.nombre + ';' + r.puntaje + ';' + notaVal + ';' + r.fecha + '\n';
-        });
+        const dataXp = JSON.parse(localStorage.getItem(key)) || {};
+        const keyPartidas = \`partidas_\${nombre}_\${curso}\`;
+        const dataPartidas = JSON.parse(localStorage.getItem(keyPartidas)) || {};
+        
+        csv += nombre + ';' + curso + ';' + (dataXp.total || 0) + ';' + (dataPartidas.total || 0) + ';' + (dataXp.notasPerfectas || 0) + ';' + (dataXp.sinErrores || 0) + '\\n';
       } catch(e) {}
     }
   });
 
-  if (!hayDatos) return mostrarMensaje('No hay puntajes guardados', 'error');
+  if (!hayDatos) return mostrarMensaje('No hay datos guardados', 'error');
 
-  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob(['\\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'notas_MatePlay_' + new Date().toLocaleDateString('es-AR').replace(/\//g,'-') + '.csv';
+  link.download = 'clasificacion_MatePlay_' + new Date().toLocaleDateString('es-AR').replace(/\\//g,'-') + '.csv';
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 100);
 };
@@ -337,77 +337,87 @@ window.abrirPanelDocente = function() {
   const filtro = document.getElementById('filtro-curso-panel') ? document.getElementById('filtro-curso-panel').value : 'todos';
 
   history.pushState({ view: 'docente' }, '');
-  let resultados = [];
+  
+  let estudiantes = [];
   Object.keys(localStorage).forEach(key => {
-    const match = key.match(/^ranking_(.+)_([^_]+)$/);
-    if (match) {
-      const juego = match[1].replace(/_/g, ' ').toUpperCase();
-      const curso = match[2];
+    const matchXp = key.match(/^xp_(.+)_([^_]+)$/);
+    if (matchXp) {
+      const nombre = matchXp[1];
+      const curso = matchXp[2];
       try {
-        const data = JSON.parse(localStorage.getItem(key));
-        data.forEach((r, idx) => resultados.push({ ...r, juego, curso, key, idx }));
+        const dataXp = JSON.parse(localStorage.getItem(key)) || {};
+        const dataPartidas = JSON.parse(localStorage.getItem(\`partidas_\${nombre}_\${curso}\`)) || { porJuego: {} };
+        estudiantes.push({ nombre, curso, xp: dataXp, partidas: dataPartidas, keyXp: key });
       } catch(e) {}
     }
   });
 
-  // Aplicar filtro si no es "todos"
-  if (filtro !== 'todos') resultados = resultados.filter(r => r.curso === filtro);
+  if (filtro !== 'todos') estudiantes = estudiantes.filter(e => e.curso === filtro);
+  estudiantes.sort((a, b) => (b.xp.total || 0) - (a.xp.total || 0));
 
-  // Ordenar por fecha (más reciente primero)
-  resultados.sort((a, b) => {
-    const da = (a.fecha || '').split('/').reverse().join('');
-    const db = (b.fecha || '').split('/').reverse().join('');
-    return db.localeCompare(da);
-  });
-
-  if (resultados.length === 0) {
-    contenido.innerHTML = '<p style="text-align:center;color:#7f8c8d;padding:20px;">No hay evaluaciones registradas aún.</p>';
+  if (estudiantes.length === 0) {
+    contenido.innerHTML = '<p style="text-align:center;color:#7f8c8d;padding:20px;">No hay jugadores registrados aún.</p>';
   } else {
-    contenido.innerHTML = `
+    let html = \`
       <div style="overflow-x:auto;">
         <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
           <tr style="background:#f0f4f8; border-bottom:2px solid #dfe6e9;">
-            <th style="padding:10px 4px; text-align:left;">Alumno / Juego</th>
-            <th style="padding:10px 4px;">Curso</th>
-            <th style="padding:10px 4px;">Nota</th>
+            <th style="padding:10px 4px; text-align:left;">Jugador</th>
+            <th style="padding:10px 4px; text-align:center;">Curso</th>
+            <th style="padding:10px 4px; text-align:center;">XP Total</th>
+            <th style="padding:10px 4px; text-align:left;">Detalle por Juego (XP / Jugadas)</th>
             <th style="padding:10px 4px;"></th>
           </tr>
-          ${resultados.map(r => {
-            const n = parseFloat(r.nota);
-            let medalla = '';
-            if (n >= 9) medalla = '🥇 ';
-            else if (n >= 7) medalla = '🥈 ';
-            else if (n >= 6) medalla = '🥉 ';
-            return `
-            <tr style="border-bottom:1px solid #eee;">
-              <td style="padding:10px 4px;"><strong>${r.nombre}</strong><br><small style="color:#7f8c8d;">${r.juego}</small></td>
-              <td style="padding:10px 4px; text-align:center;">${r.curso}</td>
-              <td style="padding:10px 4px; text-align:center;"><span style="background:${n>=6?'#d5f4e6':'#fadbd8'}; color:${n>=6?'#27ae60':'#c0392b'}; padding:4px 10px; border-radius:12px; font-weight:700;">${medalla}${r.nota || '-'}</span></td>
-              <td style="padding:10px 4px; text-align:center;"><button onclick="eliminarRegistro('${r.key}', ${r.idx})" style="width:auto; background:none; box-shadow:none; color:var(--rojo); padding:4px; margin:0; font-size:1.1rem; border:none; display:inline;">🗑️</button></td>
-            </tr>
-          `}).join('')}
-        </table>
-      </div>`;
+    \`;
+    
+    estudiantes.forEach((est, idx) => {
+      let medalla = '';
+      if (idx === 0) medalla = '🥇 ';
+      else if (idx === 1) medalla = '🥈 ';
+      else if (idx === 2) medalla = '🥉 ';
+      
+      const detallesHTML = Object.keys(est.xp.porJuego || {}).map(juegoID => {
+        const xpJuego = est.xp.porJuego[juegoID];
+        const jugadas = (est.partidas.porJuego && est.partidas.porJuego[juegoID]) || 0;
+        const nombresBotonesLocal = { pizza_rush: '🍕 Pizza Express', tetris: '👾 Tetris Galáctico', arquitecto: '📐 Arquitecto', porcentajes: '🎯 Porcentajes', chef_fraccion: '👨‍🍳 Súper Chef', combinados_fracciones: '🔬 Comb. Fracciones', ascensor_extremo: '🏢 Ascensor', clima_loco: '🌡️ Clima Loco', saldo_inteligente: '💰 Saldo', zona_impacto: '💥 Impacto', combinados_enteros: '⚡ Comb. Enteros' };
+        const nombreJ = nombresBotonesLocal[juegoID] || juegoID;
+        return \`<div style="font-size:0.75rem; color:#7f8c8d; margin-bottom: 2px;">\${nombreJ}: <strong>\${xpJuego} XP</strong> (\${jugadas} veces)</div>\`;
+      }).join('');
+
+      html += \`
+        <tr style="border-bottom:1px solid #eee;">
+          <td style="padding:10px 4px; vertical-align:top; font-size:1rem;"><strong>\${medalla}\${est.nombre}</strong></td>
+          <td style="padding:10px 4px; text-align:center; vertical-align:top;">\${est.curso}</td>
+          <td style="padding:10px 4px; text-align:center; vertical-align:top; font-weight:bold; color:#27ae60; font-size:1.1rem;">\${est.xp.total || 0}</td>
+          <td style="padding:10px 4px; vertical-align:top;">\${detallesHTML || '<span style="color:#bdc3c7;">Sin datos detallados</span>'}</td>
+          <td style="padding:10px 4px; text-align:center; vertical-align:top;">
+             <button onclick="window.eliminarRegistroDocente('\${est.nombre}', '\${est.curso}')" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.7rem; cursor:pointer;" title="Eliminar Alumno">🗑️</button>
+          </td>
+        </tr>
+      \`;
+    });
+    
+    html += \`</table></div>\`;
+    contenido.innerHTML = html;
   }
-  menu.classList.add('oculto');
-  panel.classList.remove('oculto');
+
+  if (menu) menu.classList.add('oculto');
+  if (panel) panel.classList.remove('oculto');
 };
 
 window.cerrarPanelDocente = function() {
   if (history.state) history.back(); else volverMenu();
 };
 
-window.eliminarRegistro = function(key, idx) {
-  if (!confirm('¿Eliminar este registro de evaluación?')) return;
-  try {
-    const data = JSON.parse(localStorage.getItem(key));
-    if (!data) return;
-    data.splice(idx, 1);
-    if (data.length === 0) localStorage.removeItem(key);
-    else localStorage.setItem(key, JSON.stringify(data));
-    abrirPanelDocente(); // Refresca la tabla automáticamente
-    mostrarMensaje('Registro eliminado', 'exito');
-  } catch(e) {}
+window.eliminarRegistroDocente = function(nombre, curso) {
+  if (!confirm('¿Seguro que deseas eliminar el progreso de ' + nombre + ' del curso ' + curso + '?')) return;
+  Object.keys(localStorage).forEach(k => {
+    if (k.includes('_' + nombre + '_' + curso)) {
+      localStorage.removeItem(k);
+    }
+  });
+  abrirPanelDocente(); // Refresca la tabla automáticamente
+  mostrarMensaje('Progreso eliminado', 'exito');
 };
 
 // ── Misiones y Rachas Diarias ───────────────────────────────────
@@ -493,7 +503,8 @@ function procesarMisionesTerminadas(tipo_juego, nota, xpGanada, errores) {
         m.progreso = m.meta;
         m.completada = true;
         xpMisiones += m.xp;
-        setTimeout(() => mostrarMensaje(`🎯 Misión cumplida: ${m.desc} (+${m.xp} XP)`, 'exito'), 2500);
+        const mc = m.xp * 2;
+        setTimeout(() => mostrarMensaje(`🎯 Misión cumplida: ${m.desc} (+${m.xp} XP / 🪙 ${mc})`, 'exito'), 2500);
       }
     }
   });
@@ -639,11 +650,6 @@ function ganarXP(juego, notaNum, totalErrores, puntaje) {
   xpData.total += xpGanada;
   if (notaNum >= 9.9) xpData.notasPerfectas = (xpData.notasPerfectas || 0) + 1;
   if (totalErrores === 0) xpData.sinErrores = (xpData.sinErrores || 0) + 1;
-  localStorage.setItem(xpKey(), JSON.stringify(xpData));
-
-  // Ganar MateCoins (2 Monedas por cada XP ganada)
-  let monedasGanadas = xpGanada * 2;
-  setMateCoins(getMateCoins() + monedasGanadas);
 
   // Actualizar Rachas y Misiones
   actualizarRachaAlJugar();
@@ -651,11 +657,20 @@ function ganarXP(juego, notaNum, totalErrores, puntaje) {
   if (xpExtraMisiones > 0) {
     xpData.total += xpExtraMisiones;
     xpGanada += xpExtraMisiones;
-    localStorage.setItem(xpKey(), JSON.stringify(xpData));
   }
+  
+  xpData.porJuego = xpData.porJuego || {};
+  xpData.porJuego[juego] = (xpData.porJuego[juego] || 0) + xpGanada;
+  localStorage.setItem(xpKey(), JSON.stringify(xpData));
+
+  // Ganar MateCoins (2 Monedas por cada XP ganada)
+  let monedasGanadas = xpGanada * 2;
+  setMateCoins(getMateCoins() + monedasGanadas);
 
   // Registrar partida
   partidas.total = (partidas.total || 0) + 1;
+  partidas.porJuego = partidas.porJuego || {};
+  partidas.porJuego[juego] = (partidas.porJuego[juego] || 0) + 1;
   if (!partidas.jugados.includes(juego)) partidas.jugados.push(juego);
   // Racha de sesión
   const ahora = Date.now();
@@ -1810,6 +1825,13 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
   } else if (dataCompleta.juego === 'ascensor_extremo') {
     let ejActual = 0, puntaje = 0, aciertos = 0;
     let movActual = 0, pisoActual = 0, ultimoPisoPos = 0;
+    window.onPowerUpSaltear = function() {
+      const finalFloor = ejercicios[ejActual].inicio + ejercicios[ejActual].movimientos.reduce((a,b)=>a+b, 0);
+      document.getElementById('input-ascensor').value = finalFloor;
+      movActual = ejercicios[ejActual].movimientos.length - 1; 
+      pisoActual = finalFloor - ejercicios[ejActual].movimientos[movActual]; 
+      window.comprobarPiso();
+    };
 
     function renderizarEjercicio() { // This function will now only render the static parts and initial state
       const ej = ejercicios[ejActual];
@@ -1994,10 +2016,12 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
             }, 1500);
           }
         } else {
-          reproducirSonido('error');
-          comboActual = 0;
-          mostrarMensaje('¡Piso equivocado!', 'error');
-          erroresPorTema["Suma de Enteros"] = (erroresPorTema["Suma de Enteros"] || 0) + 1;
+          if (!window.intentarUsarEscudo()) {
+            reproducirSonido('error');
+            comboActual = 0;
+            mostrarMensaje('¡Piso equivocado!', 'error');
+            erroresPorTema["Suma de Enteros"] = (erroresPorTema["Suma de Enteros"] || 0) + 1;
+          }
         }
       };
     }
@@ -2008,6 +2032,10 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
     let ejActual = 0, puntaje = 0, aciertos = 0;
     let consecutivosBajoCero = 0;
     let consecutivosCalor = 0;
+    window.onPowerUpSaltear = function() {
+      document.getElementById('input-clima').value = sumaEnteros(ejercicios[ejActual].temp_inicial, ejercicios[ejActual].cambios);
+      window.comprobarClima();
+    };
 
     function renderizarEjercicio() {
       const ej = ejercicios[ejActual];
@@ -2101,10 +2129,12 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
           }
           mostrarMensaje(msg, 'exito');
         } else { 
-          reproducirSonido('error'); 
-          erroresPorTema["Contexto Clima"] = (erroresPorTema["Contexto Clima"] || 0) + 1; 
-          consecutivosBajoCero = 0; // Se rompe la racha en caso de error
-          consecutivosCalor = 0;
+          if (!window.intentarUsarEscudo()) {
+            reproducirSonido('error'); 
+            erroresPorTema["Contexto Clima"] = (erroresPorTema["Contexto Clima"] || 0) + 1; 
+            consecutivosBajoCero = 0; // Se rompe la racha en caso de error
+            consecutivosCalor = 0;
+          }
         }
 
         const nivelCompleto = actProgreso(esCorrecto);
@@ -2120,6 +2150,14 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
   // ── SALDO INTELIGENTE ───────────────────────────────────────
   } else if (dataCompleta.juego === 'saldo_inteligente') {
     let ejActual = 0, puntaje = 0, aciertos = 0;
+    window.onPowerUpSaltear = function() {
+      const ej = ejercicios[ejActual];
+      const correcta = ej.modo === 'A' ? 
+          sumaEnteros(ej.saldo_inicial, ej.movimientos) : 
+          ej.saldo_final - ej.movimientos.reduce((a, b) => a + b, 0);
+      document.getElementById('input-saldo').value = correcta;
+      window.comprobarSaldo();
+    };
 
     function renderizarEjercicio() {
       const ej = ejercicios[ejActual];
@@ -2241,8 +2279,12 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
           aciertos++;
           if (tiempoExtraUsado === 0) { puntaje += 20; mostrarMensaje('¡Cuenta perfecta! +5 Bonus 💰', 'exito'); }
           else { puntaje += 15; mostrarMensaje('¡Cuenta perfecta! 💰', 'exito'); }
+        else { 
+          if (!window.intentarUsarEscudo()) {
+            reproducirSonido('error'); 
+            erroresPorTema["Ecuaciones de Saldo"] = (erroresPorTema["Ecuaciones de Saldo"] || 0) + 1; 
+          }
         }
-        else { reproducirSonido('error'); erroresPorTema["Ecuaciones de Saldo"] = (erroresPorTema["Ecuaciones de Saldo"] || 0) + 1; }
         const nivelCompleto = actProgreso(esCorrecto);
         setTimeout(() => {
           ejActual++;
@@ -2259,6 +2301,7 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
 
     function renderizarEjercicio() {
       const ej = ejercicios[ejActual];
+      window.onPowerUpSaltear = function() { clearInterval(window.timerID); procesarAcierto(); };
       const estilosImpacto = `
         <style>
           .expresion-impacto { font-size: 2.5rem; font-weight: 800; text-align: center; margin: 30px 0; color: #2c3e50; text-shadow: 2px 2px 0px #bdc3c7; animation: bounceIn 0.5s cubic-bezier(0.36, 0, 0.66, -0.56) both; }
@@ -2357,10 +2400,12 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
       }
 
       function procesarError(msg) {
-        reproducirSonido('error');
-        comboActual = 0;
-        mostrarMensaje(msg, 'error');
-        erroresPorTema[ej.tipo === 'raiz' ? 'Radicación' : (ej.tipo === 'potencia' ? 'Potenciación' : 'Regla de Signos')] = (erroresPorTema[ej.tipo] || 0) + 1;
+        if (!window.intentarUsarEscudo()) {
+          reproducirSonido('error');
+          comboActual = 0;
+          mostrarMensaje(msg, 'error');
+          erroresPorTema[ej.tipo === 'raiz' ? 'Radicación' : (ej.tipo === 'potencia' ? 'Potenciación' : 'Regla de Signos')] = (erroresPorTema[ej.tipo] || 0) + 1;
+        }
         actProgreso(false);
         setTimeout(() => {
           ejActual++;
@@ -2379,6 +2424,10 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
   } else if (dataCompleta.juego === 'calculos_combinados') {
     const esModuloFracciones = idJuego === 'combinados_fracciones';
     let ejActual = 0, puntaje = 0, aciertos = 0;
+    window.onPowerUpSaltear = function() {
+        document.getElementById('input-combinado').value = ejercicios[ejActual].respuesta;
+        window.verificarCombinado();
+    };
 
     function renderizarEjercicio() {
       const ej = ejercicios[ejActual];
@@ -2594,11 +2643,13 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
           mostrarMensaje('¡Cálculo correcto! 🎯', 'exito');
           actProgreso(true);
         } else {
-          comboActual = 0;
-          puntaje = Math.max(0, puntaje - 5);
-          reproducirSonido('error');
-          mostrarMensaje('Incorrecto. La respuesta era: ' + ej.respuesta, 'error');
-          erroresPorTema[tema] = (erroresPorTema[tema] || 0) + 1;
+          if (!window.intentarUsarEscudo()) {
+            comboActual = 0;
+            puntaje = Math.max(0, puntaje - 5);
+            reproducirSonido('error');
+            mostrarMensaje('Incorrecto. La respuesta era: ' + ej.respuesta, 'error');
+            erroresPorTema[tema] = (erroresPorTema[tema] || 0) + 1;
+          }
           actProgreso(false);
         }
 

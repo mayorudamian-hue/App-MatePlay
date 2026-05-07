@@ -63,10 +63,10 @@
         <button onclick="cargarJuego('combinados_enteros')" disabled aria-label="Jugar Cálculos Combinados Enteros">⚡ Cálculos Combinados - Potencias y Raíces</button>
       </section>
       <button onclick="verLogros()" id="btn-logros" class="secundario" style="margin-top:10px; border: 2px solid #f1c40f; color: #d4ac0d;" disabled>🏆 Mis Logros</button>
-      <button onclick="abrirPanelDocente()" class="secundario" style="margin-top:20px; border: 2px solid var(--azul); color: var(--azul);">📋 Ver Panel de Notas</button>
+      <button onclick="abrirPanelDocente()" class="secundario" style="margin-top:20px; border: 2px solid var(--azul); color: var(--azul);">📋 Ver Clasificación</button>
       <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
       <div style="display:flex; gap:8px;">
-        <button onclick="exportarCSV()" class="secundario" style="margin:0; font-size:0.8rem; opacity:0.8;">📥 Exportar Notas (Excel)</button>
+        <button onclick="exportarCSV()" class="secundario" style="margin:0; font-size:0.8rem; opacity:0.8;">📥 Exportar Clasificación (Excel)</button>
         <button onclick="resetearTodo()" class="secundario" style="margin:0; font-size:0.8rem; opacity:0.8;">⚙️ Reiniciar Todo</button>
       </div>
     </div>
@@ -82,7 +82,7 @@
       <button class="secundario" onclick="volverMenu()" style="margin-top: 20px;">← Volver al menú</button>
     </div>
     <div class="card oculto" id="panel-docente-container">
-      <h2 style="color: var(--azul-oscuro); display: flex; align-items: center; gap: 8px;">📊 Historial de Evaluaciones</h2>
+      <h2 style="color: var(--azul-oscuro); display: flex; align-items: center; gap: 8px;">📊 Clasificación</h2>
       <div style="margin: 15px 0 10px;">
         <label for="filtro-curso-panel" style="font-size: 0.85rem; font-weight: 600; color: #7f8c8d; display: block; margin-bottom: 5px;">Filtrar por curso:</label>
         <select id="filtro-curso-panel" onchange="abrirPanelDocente()" style="margin-bottom: 0; padding: 10px; font-size: 0.9rem; height: auto;">

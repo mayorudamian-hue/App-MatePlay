@@ -25,7 +25,7 @@
     { "id": 18, "curso_minimo": "2do", "expresion": "(-2)⁴ + (-1)⁵ * 8", "respuesta": "8", "dificultad": 2 },
     { "id": 19, "curso_minimo": "2do", "expresion": "(−3)² * 2 - √36", "respuesta": "12", "dificultad": 2 },
     { "id": 20, "curso_minimo": "2do", "expresion": "∛(-27) * (-4) + (-5)", "respuesta": "7", "dificultad": 2 },
-    { "id": 21, "curso_minimo": "2do", "expresion": "(-6)² / (-4) + √25", "respuesta": "0", "dificultad": 2 },
+    { "id": 21, "curso_minimo": "2do", "expresion": "(-6)² / (-4) + √25", "respuesta": "-4", "dificultad": 2 },
     { "id": 22, "curso_minimo": "2do", "expresion": "(2 - 5)³ + (-1)⁴ * 30", "respuesta": "3", "dificultad": 2 },
     { "id": 23, "curso_minimo": "2do", "expresion": "√81 + (-2)³ * 3", "respuesta": "-15", "dificultad": 2 },
     { "id": 24, "curso_minimo": "2do", "expresion": "(-4)² - ∛8 * 5 + 1", "respuesta": "7", "dificultad": 2 },
