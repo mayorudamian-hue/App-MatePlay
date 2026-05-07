@@ -374,7 +374,7 @@ async function cargarJuego(tipoJuego) {
 }
 
 window.exportarCSV = function() {
-  let csv = 'Alumno;Curso;XP Total;Partidas Jugadas;Notas Perfectas;Sin Errores\\n';
+  let csv = 'Alumno;Curso;XP Total;Partidas Jugadas;Notas Perfectas;Sin Errores\n';
   let hayDatos = false;
 
   Object.keys(localStorage).forEach(key => {
@@ -385,21 +385,21 @@ window.exportarCSV = function() {
       const curso = matchXp[2];
       try {
         const dataXp = JSON.parse(localStorage.getItem(key)) || {};
-        const keyPartidas = \`partidas_\${nombre}_\${curso}\`;
+        const keyPartidas = `partidas_${nombre}_${curso}`;
         const dataPartidas = JSON.parse(localStorage.getItem(keyPartidas)) || {};
         
-        csv += nombre + ';' + curso + ';' + (dataXp.total || 0) + ';' + (dataPartidas.total || 0) + ';' + (dataXp.notasPerfectas || 0) + ';' + (dataXp.sinErrores || 0) + '\\n';
+        csv += `${nombre};${curso};${dataXp.total || 0};${dataPartidas.total || 0};${dataXp.notasPerfectas || 0};${dataXp.sinErrores || 0}\n`;
       } catch(e) {}
     }
   });
 
   if (!hayDatos) return mostrarMensaje('No hay datos guardados', 'error');
 
-  const blob = new Blob(['\\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'clasificacion_MatePlay_' + new Date().toLocaleDateString('es-AR').replace(/\\//g,'-') + '.csv';
+  link.download = 'clasificacion_MatePlay_' + new Date().toLocaleDateString('es-AR').replace(/\//g,'-') + '.csv';
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 100);
 };
@@ -420,7 +420,7 @@ window.abrirPanelDocente = function() {
       const curso = matchXp[2];
       try {
         const dataXp = JSON.parse(localStorage.getItem(key)) || {};
-        const dataPartidas = JSON.parse(localStorage.getItem(\`partidas_\${nombre}_\${curso}\`)) || { porJuego: {} };
+        const dataPartidas = JSON.parse(localStorage.getItem(`partidas_${nombre}_${curso}`)) || { porJuego: {} };
         estudiantes.push({ nombre, curso, xp: dataXp, partidas: dataPartidas, keyXp: key });
       } catch(e) {}
     }
@@ -432,7 +432,7 @@ window.abrirPanelDocente = function() {
   if (estudiantes.length === 0) {
     contenido.innerHTML = '<p style="text-align:center;color:#7f8c8d;padding:20px;">No hay jugadores registrados aún.</p>';
   } else {
-    let html = \`
+    let html = `
       <div style="overflow-x:auto;">
         <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
           <tr style="background:#f0f4f8; border-bottom:2px solid #dfe6e9;">
@@ -442,7 +442,7 @@ window.abrirPanelDocente = function() {
             <th style="padding:10px 4px; text-align:left;">Detalle por Juego (XP / Jugadas)</th>
             <th style="padding:10px 4px;"></th>
           </tr>
-    \`;
+    `;
     
     estudiantes.forEach((est, idx) => {
       let medalla = '';
@@ -455,23 +455,23 @@ window.abrirPanelDocente = function() {
         const jugadas = (est.partidas.porJuego && est.partidas.porJuego[juegoID]) || 0;
         const nombresBotonesLocal = { pizza_rush: '🍕 Pizza Express', tetris: '👾 Tetris Galáctico', arquitecto: '📐 Arquitecto', porcentajes: '🎯 Porcentajes', chef_fraccion: '👨‍🍳 Súper Chef', combinados_fracciones: '🔬 Comb. Fracciones', ascensor_extremo: '🏢 Ascensor', clima_loco: '🌡️ Clima Loco', saldo_inteligente: '💰 Saldo', zona_impacto: '💥 Impacto', combinados_enteros: '⚡ Comb. Enteros' };
         const nombreJ = nombresBotonesLocal[juegoID] || juegoID;
-        return \`<div style="font-size:0.75rem; color:#7f8c8d; margin-bottom: 2px;">\${nombreJ}: <strong>\${xpJuego} XP</strong> (\${jugadas} veces)</div>\`;
+        return `<div style="font-size:0.75rem; color:#7f8c8d; margin-bottom: 2px;">${nombreJ}: <strong>${xpJuego} XP</strong> (${jugadas} veces)</div>`;
       }).join('');
 
-      html += \`
+      html += `
         <tr style="border-bottom:1px solid #eee;">
-          <td style="padding:10px 4px; vertical-align:top; font-size:1rem;"><strong>\${medalla}\${est.nombre}</strong></td>
-          <td style="padding:10px 4px; text-align:center; vertical-align:top;">\${est.curso}</td>
-          <td style="padding:10px 4px; text-align:center; vertical-align:top; font-weight:bold; color:#27ae60; font-size:1.1rem;">\${est.xp.total || 0}</td>
-          <td style="padding:10px 4px; vertical-align:top;">\${detallesHTML || '<span style="color:#bdc3c7;">Sin datos detallados</span>'}</td>
+          <td style="padding:10px 4px; vertical-align:top; font-size:1rem;"><strong>${medalla}${est.nombre}</strong></td>
+          <td style="padding:10px 4px; text-align:center; vertical-align:top;">${est.curso}</td>
+          <td style="padding:10px 4px; text-align:center; vertical-align:top; font-weight:bold; color:#27ae60; font-size:1.1rem;">${est.xp.total || 0}</td>
+          <td style="padding:10px 4px; vertical-align:top;">${detallesHTML || '<span style="color:#bdc3c7;">Sin datos detallados</span>'}</td>
           <td style="padding:10px 4px; text-align:center; vertical-align:top;">
-             <button onclick="window.eliminarRegistroDocente('\${est.nombre}', '\${est.curso}')" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.7rem; cursor:pointer;" title="Eliminar Alumno">🗑️</button>
+             <button onclick="window.eliminarRegistroDocente('${est.nombre}', '${est.curso}')" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.7rem; cursor:pointer;" title="Eliminar Alumno">🗑️</button>
           </td>
         </tr>
-      \`;
+      `;
     });
     
-    html += \`</table></div>\`;
+    html += `</table></div>`;
     contenido.innerHTML = html;
   }
 
