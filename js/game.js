@@ -1000,9 +1000,11 @@ let tiempoExtraUsado = 0;
 const LIMITE_TIEMPO_EXTRA = 2;
 
 function crearHTMLCronometro(segundos) {
+  const inv = getInventario();
   return '<div class="cronometro-wrap" style="display:flex; align-items:center; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:10px;">' +
     '<div class="timer" id="timer-display">⏱️ ' + segundos + 's</div>' +
-    '<button id="btn-extra-tiempo" onclick="window.agregarTiempo()" class="secundario" style="margin:0; padding:2px 8px; font-size:0.75rem; background:#f39c12; color:white; border:none; height:auto; line-height:1; border-radius:4px; cursor:pointer;">+15s ⏱️ (' + LIMITE_TIEMPO_EXTRA + ')</button>' +
+    '<button id="btn-extra-tiempo" onclick="window.agregarTiempo()" class="secundario" style="margin:0; padding:2px 8px; font-size:0.75rem; background:' + (inv.tiempo > 0 ? '#8e44ad' : '#95a5a6') + '; color:white; border:none; height:auto; line-height:1; border-radius:4px; cursor:pointer; opacity:' + (inv.tiempo > 0 ? '1' : '0.5') + ';">+15s ⏱️ (' + inv.tiempo + ')</button>' +
+    '<button id="btn-saltear" onclick="window.ejecutarSaltear()" class="secundario" style="margin:0; padding:2px 8px; font-size:0.75rem; background:' + (inv.saltear > 0 ? '#8e44ad' : '#95a5a6') + '; color:white; border:none; height:auto; line-height:1; border-radius:4px; cursor:pointer; opacity:' + (inv.saltear > 0 ? '1' : '0.5') + ';">⏭️ Saltear (' + inv.saltear + ')</button>' +
     '<div class="barra-tiempo-fondo" style="flex: 1 1 100%;"><div class="barra-tiempo" id="barra-timer" style="width:100%"></div></div>' +
   '</div>';
 }
@@ -1032,40 +1034,63 @@ function iniciarCronometro(segundos, onFin) {
 }
 
 window.agregarTiempo = function() {
-  if (tiempoExtraUsado >= LIMITE_TIEMPO_EXTRA) {
-    const inv = getInventario();
-    if (inv.tiempo > 0) {
-      inv.tiempo--;
-      setInventario(inv);
-      mostrarMensaje('¡Usaste un Power-Up de la tienda! (+15s) ⏱️', 'exito');
-    } else {
-      mostrarMensaje('Límite gratuito alcanzado. ¡Compra más tiempo en la tienda! 🛒', 'error');
-      return;
+  const inv = getInventario();
+  if (inv.tiempo > 0) {
+    inv.tiempo--;
+    setInventario(inv);
+    mostrarMensaje('¡Usaste un Power-Up de la tienda! (+15s) ⏱️', 'exito');
+    
+    cronometroRestante += 15;
+    actualizarCronometro(cronometroRestante, cronometroTotal);
+    trackMP('use_extra_time', { 'usos': 1 });
+    
+    const btn = document.getElementById('btn-extra-tiempo');
+    if (btn) {
+      btn.textContent = '+15s ⏱️ (' + inv.tiempo + ')';
+      if (inv.tiempo === 0) {
+        btn.style.opacity = '0.5';
+        btn.style.background = '#95a5a6';
+      }
     }
   } else {
-    tiempoExtraUsado++;
-    mostrarMensaje('¡+15 segundos! Usos gratuitos: ' + tiempoExtraUsado + '/' + LIMITE_TIEMPO_EXTRA + ' ⏳', 'exito');
+    mostrarMensaje('No tienes tiempo extra. ¡Cómpralo en la tienda! 🛒', 'error');
   }
+};
 
-  cronometroRestante += 15;
-  actualizarCronometro(cronometroRestante, cronometroTotal);
+window.intentarUsarEscudo = function() {
+  const inv = getInventario();
+  if (inv.escudo > 0) {
+    inv.escudo--;
+    setInventario(inv);
+    mostrarMensaje('🛡️ ¡Escudo activado! Te ha salvado de un error.', 'exito');
+    return true; // Se usó el escudo
+  }
+  return false; // No hay escudo
+};
 
-  trackMP('use_extra_time', { 'usos': tiempoExtraUsado });
-  
-  const btn = document.getElementById('btn-extra-tiempo');
-  if (btn) {
-    const usosRestantes = Math.max(0, LIMITE_TIEMPO_EXTRA - tiempoExtraUsado);
-    const inv = getInventario();
-    if (usosRestantes > 0) {
-      btn.textContent = '+15s ⏱️ (' + usosRestantes + ')';
-    } else if (inv.tiempo > 0) {
-      btn.textContent = '+15s ⏱️ (' + inv.tiempo + ' en mochila)';
-      btn.style.background = '#8e44ad'; // Purple for premium
+window.ejecutarSaltear = function() {
+  const inv = getInventario();
+  if (inv.saltear > 0) {
+    if (typeof window.onPowerUpSaltear === 'function') {
+      inv.saltear--;
+      setInventario(inv);
+      mostrarMensaje('⏭️ ¡Ejercicio salteado mágicamente!', 'exito');
+      
+      const btn = document.getElementById('btn-saltear');
+      if (btn) {
+        btn.textContent = '⏭️ Saltear (' + inv.saltear + ')';
+        if (inv.saltear === 0) {
+          btn.style.opacity = '0.5';
+          btn.style.background = '#95a5a6';
+        }
+      }
+      
+      window.onPowerUpSaltear();
     } else {
-      btn.textContent = '+15s ⏱️ (0)';
-      btn.style.opacity = '0.5';
-      btn.style.background = '#95a5a6';
+      mostrarMensaje('El power-up de saltear no está disponible en este minijuego aún.', 'error');
     }
+  } else {
+    mostrarMensaje('No tienes salteos. ¡Cómpralos en la tienda! 🛒', 'error');
   }
 };
 
@@ -1259,6 +1284,7 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
   // ── PIZZA RUSH ──────────────────────────────────────────────
   if (dataCompleta.juego === 'pizza_rush') {
     let pedidoActual = 0, puntaje = 0, aciertos = 0, fraccionesEnCaja = [];
+    window.onPowerUpSaltear = function() { clearInterval(window.timerID); terminarPedido(true); };
 
     function generarPorciones(necesarias) {
       const extras = ["1/8","1/4","1/2","1/3","1/6","1","2/3"].filter(function(f) { return necesarias.indexOf(f) === -1; });
@@ -1335,10 +1361,12 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
         });
       }
       else {
-        comboActual = 0;
-        erroresPorTema[tema] = (erroresPorTema[tema] || 0) + 1;
-        if (excedido) { mostrarMensaje('Te pasaste. Era ' + sumaCorrecta, 'error'); }
-        else { mostrarMensaje('Tiempo agotado. Era ' + sumaCorrecta, 'error'); }
+        if (!window.intentarUsarEscudo()) {
+          comboActual = 0;
+          erroresPorTema[tema] = (erroresPorTema[tema] || 0) + 1;
+          if (excedido) { mostrarMensaje('Te pasaste. Era ' + sumaCorrecta, 'error'); }
+          else { mostrarMensaje('Tiempo agotado. Era ' + sumaCorrecta, 'error'); }
+        }
       }
       setTimeout(function() {
         pedidoActual++;
@@ -1352,6 +1380,12 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
   } else if (dataCompleta.juego === 'equivalencia_tetris') {
     let fichaActual = 0, puntaje = 0, aciertos = 0;
     const incorrectasPool = ["1/3","2/5","3/8","5/6","1/4","4/10","3/9","2/6"];
+    window.onPowerUpSaltear = function() { 
+      const ej = ejercicios[fichaActual];
+      Array.from(document.querySelectorAll('.ficha-tetris[data-valor]')).forEach(f => {
+        if (sonEquivalentes(f.dataset.valor, ej.fraccion_visible) && !f.classList.contains('correcta')) f.click();
+      });
+    };
 
     function renderizarFicha() {
       const ej = ejercicios[fichaActual];
@@ -1376,11 +1410,13 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
             const rect = ficha.getBoundingClientRect();
             crearParticulas(rect.left + rect.width/2, rect.top + rect.height/2, '#ffc107');
           } else {
-            comboActual = 0;
-            const tema = ej.familia ? ej.familia.charAt(0).toUpperCase() + ej.familia.slice(1) : "Equivalencias";
-            erroresPorTema[tema] = (erroresPorTema[tema] || 0) + 1;
-            ficha.classList.add('incorrecta'); puntaje = Math.max(0, puntaje - 5);
-            reproducirSonido('error');
+            if (!window.intentarUsarEscudo()) {
+              comboActual = 0;
+              const tema = ej.familia ? ej.familia.charAt(0).toUpperCase() + ej.familia.slice(1) : "Equivalencias";
+              erroresPorTema[tema] = (erroresPorTema[tema] || 0) + 1;
+              ficha.classList.add('incorrecta'); puntaje = Math.max(0, puntaje - 5);
+              reproducirSonido('error');
+            }
           }
           document.querySelector('.puntaje').textContent = '⭐ ' + puntaje;
           ficha.onclick = null;
@@ -1421,6 +1457,21 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
   // ── CHEF FRACCION ───────────────────────────────────────────
   } else if (dataCompleta.juego === 'chef_fraccion') {
     let recetaActual = 0, totalEnBowl = "0", puntaje = 0, aciertos = 0;
+    window.onPowerUpSaltear = function() {
+      totalEnBowl = ejercicios[recetaActual].cantidad_objetivo;
+      const display = document.getElementById('total-chef-display');
+      if(display) display.textContent = totalEnBowl;
+      clearInterval(window.timerID);
+      actProgreso(true);
+      aciertos++; comboActual++; puntaje += 15;
+      mostrarMensaje('¡Receta Perfecta!', 'exito');
+      setTimeout(function() {
+        recetaActual++;
+        const nCompleto = document.getElementById('progreso-nivel-barra') && document.getElementById('progreso-nivel-barra').style.width === '100%';
+        if (recetaActual < ejercicios.length && !nCompleto) renderizarReceta();
+        else mostrarPantallaFinal(contenedor, 'chef_fraccion', curso, puntaje, aciertos, recetaActual, erroresPorTema);
+      }, 1500);
+    };
 
     const obtenerColorLiquido = (texto) => {
       const t = texto.toLowerCase();
@@ -1488,10 +1539,12 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
 
       iniciarCronometro(TIEMPO_POR_EJERCICIO, function() {
         const ejFin = ejercicios[recetaActual];
-        comboActual = 0;
+        if (!window.intentarUsarEscudo()) {
+          comboActual = 0;
+          const tema = categorizar(ejFin.cantidad_objetivo);
+          erroresPorTema[tema] = (erroresPorTema[tema] || 0) + 1;
+        }
         actProgreso(false);
-        const tema = categorizar(ejFin.cantidad_objetivo);
-        erroresPorTema[tema] = (erroresPorTema[tema] || 0) + 1;
         const obj = ejFin.cantidad_objetivo;
         mostrarMensaje('Tiempo. Era ' + obj, 'error');
         setTimeout(renderizarReceta, 1500);
@@ -1575,9 +1628,11 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
           else mostrarPantallaFinal(contenedor, 'chef_fraccion', curso, puntaje, aciertos, recetaActual, erroresPorTema);
         }, 1500);
       } else if (comparar(totalEnBowl, objetivo) > 0) {
-        comboActual = 0;
-        const tema = categorizar(objetivo);
-        erroresPorTema[tema] = (erroresPorTema[tema] || 0) + 1;
+        if (!window.intentarUsarEscudo()) {
+          comboActual = 0;
+          const tema = categorizar(objetivo);
+          erroresPorTema[tema] = (erroresPorTema[tema] || 0) + 1;
+        }
         actProgreso(false);
         clearInterval(window.timerID);
 
@@ -1597,6 +1652,10 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
   // ── ARQUITECTO ──────────────────────────────────────────────
   } else if (dataCompleta.juego === 'arquitecto') {
     let ejActual = 0, puntaje = 0, aciertos = 0;
+    window.onPowerUpSaltear = function() {
+      const b = document.querySelectorAll('.btn-opcion');
+      if (b.length > ejercicios[ejActual].correcta_idx) b[ejercicios[ejActual].correcta_idx].click();
+    };
 
     function renderizarEjercicio() {
       const ej = ejercicios[ejActual];
@@ -1729,8 +1788,10 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
             }
             const r = this.getBoundingClientRect(); crearParticulas(r.left + r.width/2, r.top + r.height/2, '#ffc107');
           } else {
-            this.classList.add('incorrecta'); comboActual = 0; reproducirSonido('error');
-            erroresPorTema["Conversión Porcentaje"] = (erroresPorTema["Conversión Porcentaje"] || 0) + 1;
+            if (!window.intentarUsarEscudo()) {
+              this.classList.add('incorrecta'); comboActual = 0; reproducirSonido('error');
+              erroresPorTema["Conversión Porcentaje"] = (erroresPorTema["Conversión Porcentaje"] || 0) + 1;
+            }
           }
           const nivelCompleto = actProgreso(esCorrecto);
           contenedor.querySelectorAll('.ficha-tetris').forEach(b => b.onclick = null);
