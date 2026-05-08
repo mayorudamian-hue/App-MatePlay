@@ -87,18 +87,27 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 else mp_init();
 
 // ── Sonidos ───────────────────────────────────────────────────
-const SONIDOS = {
-  exito: new Audio('./assets/sounds/exito.mp3'),
-  error: new Audio('./assets/sounds/error.mp3'),
-  grab: new Audio('./assets/sounds/grab.mp3'),
-  drop: new Audio('./assets/sounds/drop.mp3'),
-  bubbling: new Audio('./assets/sounds/bubbling.mp3'),
-  fanfarria: new Audio('./assets/sounds/fanfarria.mp3'),
-  elevator: new Audio('./assets/sounds/elevator.mp3'),
-  ding: new Audio('./assets/sounds/ding.mp3'),
-  caja: new Audio('./assets/sounds/caja.mp3'),
-  encaje: new Audio('./assets/sounds/encaje.mp3')
+const RUTAS_SONIDOS = {
+  exito: './assets/sounds/exito.mp3',
+  error: './assets/sounds/error.mp3',
+  grab: './assets/sounds/grab.mp3',
+  drop: './assets/sounds/drop.mp3',
+  bubbling: './assets/sounds/bubbling.mp3',
+  fanfarria: './assets/sounds/fanfarria.mp3',
+  elevator: './assets/sounds/elevator.mp3',
+  ding: './assets/sounds/ding.mp3',
+  caja: './assets/sounds/caja.mp3',
+  encaje: './assets/sounds/encaje.mp3'
 };
+const SONIDOS = {};
+// Pre-cargar solo cuando existan
+Object.entries(RUTAS_SONIDOS).forEach(([k, ruta]) => {
+  try {
+    const a = new Audio(ruta);
+    a.preload = 'none'; // No pre-descargar, se carga al primer uso
+    SONIDOS[k] = a;
+  } catch(e) {}
+});
 
 function reproducirSonido(tipo) {
   if (!SONIDOS[tipo]) return;
@@ -1048,6 +1057,14 @@ function mostrarPantallaFinal(contenedor, juego, curso, puntaje, aciertos, total
   const totalErrores2 = Object.values(erroresPorTema).reduce((a, b) => a + b, 0);
   const xpResult = ganarXP(juego, parseFloat(nota), totalErrores2, puntaje);
 
+  // Desglose de XP para mostrar al usuario
+  let xpBase = 10;
+  let xpNota = Math.round(parseFloat(nota) * 5);
+  let xpSinErrores = totalErrores2 === 0 ? 20 : 0;
+  let xpNotaAlta = parseFloat(nota) >= 9 ? 15 : 0;
+  let xpPorPuntaje = Math.min(20, Math.round(puntaje / 10));
+  let xpMisiones = xpResult.xpGanada - (xpBase + xpNota + xpSinErrores + xpNotaAlta + xpPorPuntaje);
+
   const xpProgressColor = xpResult.nivel.nivel >= 8
     ? 'linear-gradient(90deg,#f1c40f,#e67e22)'
     : xpResult.nivel.nivel >= 5
@@ -1056,18 +1073,36 @@ function mostrarPantallaFinal(contenedor, juego, curso, puntaje, aciertos, total
   const progresoXP = calcularProgresoNivel(xpResult.xpTotal);
 
   const xpBannerHTML = `
-    <div style="background:linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,255,255,0.6));border-radius:16px;padding:16px;margin-bottom:20px;border:2px solid rgba(255,255,255,0.9);box-shadow:0 8px 20px rgba(0,0,0,0.06);">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-        <span style="font-size:2rem;">${xpResult.nivel.emoji}</span>
-        <div>
-          <div style="font-weight:900;font-size:1rem;color:#2c3e50;">Nv.${xpResult.nivel.nivel} ${xpResult.nivel.nombre}</div>
-          <div style="font-size:0.8rem;color:#27ae60;font-weight:700;">+${xpResult.xpGanada} XP ganados · Total: ${xpResult.xpTotal} XP</div>
+    <div style="background:linear-gradient(135deg,rgba(255,255,255,0.95),rgba(240,240,240,0.9));border-radius:20px;padding:18px;margin-bottom:20px;border:2px solid #3498db;box-shadow:0 10px 25px rgba(0,0,0,0.1);text-align:left;">
+      <div style="display:flex;align-items:center;gap:15px;margin-bottom:15px;border-bottom:1px solid rgba(0,0,0,0.1);padding-bottom:10px;">
+        <span style="font-size:2.5rem;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));">${xpResult.nivel.emoji}</span>
+        <div style="flex:1;">
+          <div style="font-weight:900;font-size:1.1rem;color:#2c3e50;display:flex;justify-content:space-between;align-items:center;">
+            <span>Nv.${xpResult.nivel.nivel} ${xpResult.nivel.nombre}</span>
+            <span style="color:#27ae60;font-size:1.2rem;">+${xpResult.xpGanada} XP</span>
+          </div>
+          <div style="background:rgba(0,0,0,0.06);border-radius:10px;height:12px;overflow:hidden;margin:6px 0;">
+            <div style="height:100%;border-radius:10px;background:${xpProgressColor};width:${progresoXP.pct}%;transition:width 1.5s cubic-bezier(0.17, 0.67, 0.83, 0.67);"></div>
+          </div>
+          <div style="font-size:0.75rem;color:#7f8c8d;display:flex;justify-content:space-between;">
+            <span>${xpResult.xpTotal} XP Totales</span>
+            <span>${progresoXP.xpParaSiguiente > 0 ? progresoXP.xpEnNivel+'/'+progresoXP.xpParaSiguiente+' para Nv.'+(xpResult.nivel.nivel+1) : '¡Nivel Máximo!'}</span>
+          </div>
         </div>
       </div>
-      <div style="background:rgba(0,0,0,0.08);border-radius:8px;height:10px;overflow:hidden;">
-        <div style="height:100%;border-radius:8px;background:${xpProgressColor};width:${progresoXP.pct}%;"></div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.8rem;color:#555;">
+        <div style="display:flex;justify-content:space-between;"><span>• Base:</span> <strong>+${xpBase}</strong></div>
+        <div style="display:flex;justify-content:space-between;"><span>• Nota:</span> <strong>+${xpNota}</strong></div>
+        ${xpSinErrores > 0 ? `<div style="display:flex;justify-content:space-between;color:#27ae60;"><span>• ¡Sin errores!:</span> <strong>+${xpSinErrores}</strong></div>` : ''}
+        ${xpNotaAlta > 0 ? `<div style="display:flex;justify-content:space-between;color:#27ae60;"><span>• Nota alta:</span> <strong>+${xpNotaAlta}</strong></div>` : ''}
+        <div style="display:flex;justify-content:space-between;"><span>• Puntaje:</span> <strong>+${xpPorPuntaje}</strong></div>
+        ${xpMisiones > 0 ? `<div style="display:flex;justify-content:space-between;color:#8e44ad;"><span>• Misiones:</span> <strong>+${xpMisiones}</strong></div>` : ''}
       </div>
-      <div style="font-size:0.75rem;color:#95a5a6;margin-top:4px;text-align:right;">${progresoXP.xpParaSiguiente > 0 ? progresoXP.xpEnNivel+'/'+progresoXP.xpParaSiguiente+' XP para siguiente nivel' : '👑 Nivel máximo'}</div>
+      
+      <div style="margin-top:12px;padding-top:8px;border-top:1px dashed rgba(0,0,0,0.1);display:flex;justify-content:center;align-items:center;gap:8px;">
+        <span style="font-size:1.1rem;font-weight:800;color:#f39c12;">🪙 Ganaste: ${xpResult.xpGanada * 2} MateCoins</span>
+      </div>
     </div>`;
 
   contenedor.innerHTML =
@@ -1535,11 +1570,13 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
         }; // Usar TIEMPO_POR_EJERCICIO
       });
       iniciarCronometro(TIEMPO_POR_EJERCICIO, function() {
-        comboActual = 0;
+        if (!window.intentarUsarEscudo()) {
+          comboActual = 0;
+          const tema = ej.familia ? ej.familia.charAt(0).toUpperCase() + ej.familia.slice(1) : "Equivalencias";
+          erroresPorTema[tema] = (erroresPorTema[tema] || 0) + 1;
+          mostrarMensaje('Tiempo! Siguiente...', 'error');
+        }
         actProgreso(false);
-        const tema = ej.familia ? ej.familia.charAt(0).toUpperCase() + ej.familia.slice(1) : "Equivalencias";
-        erroresPorTema[tema] = (erroresPorTema[tema] || 0) + 1;
-        mostrarMensaje('Tiempo! Siguiente...', 'error');
         avanzarFicha(false);
       });
     }
@@ -1805,12 +1842,14 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
               }, k * 80);
             }
           } else {
-            comboActual = 0;
-            this.classList.add('incorrecta');
-            const ref = contenedor.querySelector('.cuerda-ref');
-            if (ref) ref.classList.add('incorrecta');
-            reproducirSonido('error');
-            erroresPorTema["Noción de Entero"] = (erroresPorTema["Noción de Entero"] || 0) + 1;
+            if (!window.intentarUsarEscudo()) {
+              comboActual = 0;
+              this.classList.add('incorrecta');
+              const ref = contenedor.querySelector('.cuerda-ref');
+              if (ref) ref.classList.add('incorrecta');
+              reproducirSonido('error');
+              erroresPorTema["Noción de Entero"] = (erroresPorTema["Noción de Entero"] || 0) + 1;
+            }
           }
           const nivelCompleto = actProgreso(idx === ej.correcta_idx);
           contenedor.querySelectorAll('.cuerda-opcion').forEach(b => b.onclick = null);
@@ -1821,7 +1860,16 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
           }, 1500);
         };
       });
-      iniciarCronometro(TIEMPO_POR_EJERCICIO, () => { comboActual = 0; actProgreso(false); ejActual++; if(ejActual < ejercicios.length) renderizarEjercicio(); else mostrarPantallaFinal(contenedor, 'arquitecto', curso, puntaje, aciertos, ejActual, erroresPorTema); });
+      iniciarCronometro(TIEMPO_POR_EJERCICIO, () => { 
+        if (!window.intentarUsarEscudo()) {
+          comboActual = 0; 
+          erroresPorTema["Noción de Entero"] = (erroresPorTema["Noción de Entero"] || 0) + 1;
+        }
+        actProgreso(false); 
+        ejActual++; 
+        if(ejActual < ejercicios.length) renderizarEjercicio(); 
+        else mostrarPantallaFinal(contenedor, 'arquitecto', curso, puntaje, aciertos, ejActual, erroresPorTema); 
+      });
     }
     renderizarEjercicio();
 
@@ -1831,6 +1879,9 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
 
     function renderizarEjercicio() {
       const ej = ejercicios[ejActual];
+      window.onPowerUpSaltear = function() {
+        document.querySelector(`.ficha-tetris[data-val="${ej.correcta}"]`).click();
+      };
       contenedor.innerHTML = getProgresoHTML() + // Usar TIEMPO_POR_EJERCICIO
         '<div class="header-juego">' + crearHTMLCronometro(TIEMPO_POR_EJERCICIO) + '<div class="puntaje">⭐ ' + puntaje + '</div></div>' +
         '<div style="text-align:right;color:#7f8c8d;font-size:0.85rem;margin-bottom:6px;">Desafío ' + (ejActual+1) + '/10</div>' +
@@ -1901,7 +1952,16 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
           }, 1500);
         };
       });
-      iniciarCronometro(TIEMPO_POR_EJERCICIO, () => { comboActual = 0; actProgreso(false); ejActual++; if(ejActual < ejercicios.length) renderizarEjercicio(); else mostrarPantallaFinal(contenedor, 'porcentajes', curso, puntaje, aciertos, ejActual, erroresPorTema); });
+      iniciarCronometro(TIEMPO_POR_EJERCICIO, () => { 
+        if (!window.intentarUsarEscudo()) {
+          comboActual = 0; 
+          erroresPorTema["Conversión Porcentaje"] = (erroresPorTema["Conversión Porcentaje"] || 0) + 1;
+        }
+        actProgreso(false); 
+        ejActual++; 
+        if(ejActual < ejercicios.length) renderizarEjercicio(); 
+        else mostrarPantallaFinal(contenedor, 'porcentajes', curso, puntaje, aciertos, ejActual, erroresPorTema); 
+      });
     }
     renderizarEjercicio();
 
@@ -2060,7 +2120,12 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
       document.getElementById('input-ascensor').focus();
       moverAscensorVisual(pisoActual, false); // Initial elevator position
       iniciarCronometro(TIEMPO_POR_EJERCICIO, () => {
-         comboActual = 0; mostrarMensaje('¡Tiempo agotado!', 'error');
+         if (!window.intentarUsarEscudo()) {
+           comboActual = 0; 
+           mostrarMensaje('¡Tiempo agotado!', 'error');
+           erroresPorTema["Suma de Enteros"] = (erroresPorTema["Suma de Enteros"] || 0) + 1;
+         }
+         actProgreso(false);
          ejActual++; 
          if(ejActual < ejercicios.length) renderizarEjercicio();
          else mostrarPantallaFinal(contenedor, 'ascensor_extremo', curso, puntaje, aciertos, ejActual, erroresPorTema);
@@ -2227,8 +2292,18 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
           if (ejActual < ejercicios.length && !nivelCompleto) renderizarEjercicio();
           else mostrarPantallaFinal(contenedor, 'clima_loco', curso, puntaje, aciertos, ejActual, erroresPorTema);
         }, 1500);
-      };
-    } // Usar TIEMPO_POR_EJERCICIO
+      iniciarCronometro(TIEMPO_POR_EJERCICIO, () => {
+        if (!window.intentarUsarEscudo()) {
+          comboActual = 0;
+          erroresPorTema["Contexto Clima"] = (erroresPorTema["Contexto Clima"] || 0) + 1;
+          mostrarMensaje('¡Tiempo agotado!', 'error');
+        }
+        actProgreso(false);
+        ejActual++;
+        if (ejActual < ejercicios.length) renderizarEjercicio();
+        else mostrarPantallaFinal(contenedor, 'clima_loco', curso, puntaje, aciertos, ejActual, erroresPorTema);
+      });
+    }
     renderizarEjercicio();
 
   // ── SALDO INTELIGENTE ───────────────────────────────────────
@@ -2375,8 +2450,18 @@ function mostrarJuego(dataCompleta, ejercicios, curso) {
           if (ejActual < ejercicios.length && !nivelCompleto) renderizarEjercicio();
           else mostrarPantallaFinal(contenedor, 'saldo_inteligente', curso, puntaje, aciertos, ejActual, erroresPorTema);
         }, 1500);
-      };
-    } // Usar TIEMPO_POR_EJERCICIO
+      iniciarCronometro(TIEMPO_POR_EJERCICIO, () => {
+        if (!window.intentarUsarEscudo()) {
+          comboActual = 0;
+          erroresPorTema["Ecuaciones de Saldo"] = (erroresPorTema["Ecuaciones de Saldo"] || 0) + 1;
+          mostrarMensaje('¡Tiempo agotado!', 'error');
+        }
+        actProgreso(false);
+        ejActual++;
+        if (ejActual < ejercicios.length) renderizarEjercicio();
+        else mostrarPantallaFinal(contenedor, 'saldo_inteligente', curso, puntaje, aciertos, ejActual, erroresPorTema);
+      });
+    }
     renderizarEjercicio();
 
   // ── ZONA DE IMPACTO ─────────────────────────────────────────

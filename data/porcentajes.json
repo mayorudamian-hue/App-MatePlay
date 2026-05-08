@@ -339,7 +339,7 @@
       "id": 31,
       "curso_minimo": "1ro",
       "porcentaje": 70,
-      "fraccion_correcta": "7/10",
+      "correcta": "7/10",
       "opciones": [
         "7/10",
         "8/10",
@@ -351,7 +351,7 @@
       "id": 32,
       "curso_minimo": "1ro",
       "porcentaje": 70,
-      "fraccion_correcta": "7/10",
+      "correcta": "7/10",
       "opciones": [
         "7/10",
         "8/10",
@@ -363,7 +363,7 @@
       "id": 33,
       "curso_minimo": "1ro",
       "porcentaje": 80,
-      "fraccion_correcta": "4/5",
+      "correcta": "4/5",
       "opciones": [
         "1",
         "4/5",
@@ -375,7 +375,7 @@
       "id": 34,
       "curso_minimo": "3ro",
       "porcentaje": 40,
-      "fraccion_correcta": "2/5",
+      "correcta": "2/5",
       "opciones": [
         "1/5",
         "2/5",
@@ -387,7 +387,7 @@
       "id": 35,
       "curso_minimo": "1ro",
       "porcentaje": 10,
-      "fraccion_correcta": "1/10",
+      "correcta": "1/10",
       "opciones": [
         "1/10",
         "1/5",
@@ -399,7 +399,7 @@
       "id": 36,
       "curso_minimo": "1ro",
       "porcentaje": 70,
-      "fraccion_correcta": "7/10",
+      "correcta": "7/10",
       "opciones": [
         "8/10",
         "3/5",
@@ -411,7 +411,7 @@
       "id": 37,
       "curso_minimo": "2do",
       "porcentaje": 25,
-      "fraccion_correcta": "1/4",
+      "correcta": "1/4",
       "opciones": [
         "1/2",
         "1/4",
@@ -423,7 +423,7 @@
       "id": 38,
       "curso_minimo": "3ro",
       "porcentaje": 20,
-      "fraccion_correcta": "1/5",
+      "correcta": "1/5",
       "opciones": [
         "1/4",
         "1/5",
@@ -435,7 +435,7 @@
       "id": 39,
       "curso_minimo": "1ro",
       "porcentaje": 20,
-      "fraccion_correcta": "1/5",
+      "correcta": "1/5",
       "opciones": [
         "1/5",
         "2/5",
@@ -447,7 +447,7 @@
       "id": 40,
       "curso_minimo": "3ro",
       "porcentaje": 90,
-      "fraccion_correcta": "9/10",
+      "correcta": "9/10",
       "opciones": [
         "1",
         "9/10",
@@ -459,7 +459,7 @@
       "id": 41,
       "curso_minimo": "3ro",
       "porcentaje": 40,
-      "fraccion_correcta": "2/5",
+      "correcta": "2/5",
       "opciones": [
         "2/5",
         "3/5",
@@ -471,7 +471,7 @@
       "id": 42,
       "curso_minimo": "2do",
       "porcentaje": 10,
-      "fraccion_correcta": "1/10",
+      "correcta": "1/10",
       "opciones": [
         "2/10",
         "1/5",
@@ -483,7 +483,7 @@
       "id": 43,
       "curso_minimo": "3ro",
       "porcentaje": 25,
-      "fraccion_correcta": "1/4",
+      "correcta": "1/4",
       "opciones": [
         "3/4",
         "1/2",
@@ -495,7 +495,7 @@
       "id": 44,
       "curso_minimo": "1ro",
       "porcentaje": 80,
-      "fraccion_correcta": "4/5",
+      "correcta": "4/5",
       "opciones": [
         "1",
         "4/5",
@@ -507,7 +507,7 @@
       "id": 45,
       "curso_minimo": "3ro",
       "porcentaje": 20,
-      "fraccion_correcta": "1/5",
+      "correcta": "1/5",
       "opciones": [
         "1/5",
         "1/4",
@@ -519,7 +519,7 @@
       "id": 46,
       "curso_minimo": "3ro",
       "porcentaje": 10,
-      "fraccion_correcta": "1/10",
+      "correcta": "1/10",
       "opciones": [
         "1/10",
         "2/10",
@@ -531,7 +531,7 @@
       "id": 47,
       "curso_minimo": "2do",
       "porcentaje": 20,
-      "fraccion_correcta": "1/5",
+      "correcta": "1/5",
       "opciones": [
         "1/5",
         "2/5",
@@ -543,7 +543,7 @@
       "id": 48,
       "curso_minimo": "3ro",
       "porcentaje": 50,
-      "fraccion_correcta": "1/2",
+      "correcta": "1/2",
       "opciones": [
         "1/4",
         "1/2",
@@ -555,7 +555,7 @@
       "id": 49,
       "curso_minimo": "1ro",
       "porcentaje": 25,
-      "fraccion_correcta": "1/4",
+      "correcta": "1/4",
       "opciones": [
         "3/4",
         "1/2",
@@ -567,7 +567,7 @@
       "id": 50,
       "curso_minimo": "1ro",
       "porcentaje": 70,
-      "fraccion_correcta": "7/10",
+      "correcta": "7/10",
       "opciones": [
         "8/10",
         "3/5",
@@ -579,7 +579,7 @@
       "id": 51,
       "curso_minimo": "3ro",
       "porcentaje": 10,
-      "fraccion_correcta": "1/10",
+      "correcta": "1/10",
       "opciones": [
         "1/5",
         "1/10",
@@ -591,7 +591,7 @@
       "id": 52,
       "curso_minimo": "2do",
       "porcentaje": 20,
-      "fraccion_correcta": "1/5",
+      "correcta": "1/5",
       "opciones": [
         "1/5",
         "2/5",
@@ -603,7 +603,7 @@
       "id": 53,
       "curso_minimo": "1ro",
       "porcentaje": 75,
-      "fraccion_correcta": "3/4",
+      "correcta": "3/4",
       "opciones": [
         "1/2",
         "1/4",
@@ -615,7 +615,7 @@
       "id": 54,
       "curso_minimo": "2do",
       "porcentaje": 10,
-      "fraccion_correcta": "1/10",
+      "correcta": "1/10",
       "opciones": [
         "2/10",
         "1/5",
@@ -627,7 +627,7 @@
       "id": 55,
       "curso_minimo": "2do",
       "porcentaje": 10,
-      "fraccion_correcta": "1/10",
+      "correcta": "1/10",
       "opciones": [
         "1/10",
         "1/5",
@@ -639,7 +639,7 @@
       "id": 56,
       "curso_minimo": "2do",
       "porcentaje": 90,
-      "fraccion_correcta": "9/10",
+      "correcta": "9/10",
       "opciones": [
         "1",
         "9/10",
@@ -651,7 +651,7 @@
       "id": 57,
       "curso_minimo": "1ro",
       "porcentaje": 75,
-      "fraccion_correcta": "3/4",
+      "correcta": "3/4",
       "opciones": [
         "1/2",
         "1/4",
@@ -663,7 +663,7 @@
       "id": 58,
       "curso_minimo": "3ro",
       "porcentaje": 90,
-      "fraccion_correcta": "9/10",
+      "correcta": "9/10",
       "opciones": [
         "1",
         "9/10",
@@ -675,7 +675,7 @@
       "id": 59,
       "curso_minimo": "1ro",
       "porcentaje": 80,
-      "fraccion_correcta": "4/5",
+      "correcta": "4/5",
       "opciones": [
         "3/5",
         "4/5",
@@ -687,7 +687,7 @@
       "id": 60,
       "curso_minimo": "1ro",
       "porcentaje": 70,
-      "fraccion_correcta": "7/10",
+      "correcta": "7/10",
       "opciones": [
         "7/10",
         "3/5",
