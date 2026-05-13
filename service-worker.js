@@ -1,9 +1,12 @@
-const CACHE_NAME = 'mateplay-v1.2.0';
-const FILES_TO_CACHE = [
+const CACHE_NAME = 'mateplay-v1.2.1';
+const ESSENTIAL_FILES = [
   './', 
   './index.html', 
   './js/game.js', 
   './css/estilos.css',
+  './manifest.json', 
+  './assets/icon-192.png', 
+  './assets/icon-512.png',
   './data/pizza_rush.json', 
   './data/tetris.json', 
   './data/chef_fraccion.json',
@@ -14,10 +17,10 @@ const FILES_TO_CACHE = [
   './data/saldo_inteligente.json', 
   './data/zona_impacto.json',
   './data/combinados_enteros.json', 
-  './data/combinados_fracciones.json',
-  './manifest.json', 
-  './assets/icon-192.png', 
-  './assets/icon-512.png',
+  './data/combinados_fracciones.json'
+];
+
+const OPTIONAL_ASSETS = [
   './assets/sounds/exito.mp3', 
   './assets/sounds/error.mp3',
   './assets/sounds/grab.mp3', 
@@ -30,12 +33,17 @@ const FILES_TO_CACHE = [
   './assets/sounds/encaje.mp3'
 ];
 
-// Instalación: Cachear todo lo necesario
+// Instalación: Cachear lo esencial y luego intentar lo opcional
 self.addEventListener('install', (evt) => {
   evt.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[ServiceWorker] Pre-cacheando archivos para uso offline');
-      return cache.addAll(FILES_TO_CACHE);
+      console.log('[ServiceWorker] Cacheando archivos esenciales...');
+      // Intentar cachear archivos opcionales uno por uno para que no rompa la promesa global
+      OPTIONAL_ASSETS.forEach(url => {
+        cache.add(url).catch(err => console.warn(`[ServiceWorker] No se pudo cachear activo opcional: ${url}`));
+      });
+      // Estos SÍ deben existir para que el SW se instale
+      return cache.addAll(ESSENTIAL_FILES);
     })
   );
   self.skipWaiting();
@@ -56,21 +64,13 @@ self.addEventListener('activate', (evt) => {
   self.clients.claim();
 });
 
-// Fetch: Estrategia Cache-First (Priorizar cache para velocidad y offline)
+// Fetch: Estrategia Cache-First
 self.addEventListener('fetch', (evt) => {
-  // Solo manejar peticiones GET
   if (evt.request.method !== 'GET') return;
-
   evt.respondWith(
     caches.match(evt.request).then((cachedResponse) => {
-      if (cachedResponse) return cachedResponse;
-
-      // Si no está en cache, intentar red
-      return fetch(evt.request).then((response) => {
-        // Opcional: Podríamos cachear dinámicamente aquí si quisiéramos
-        return response;
-      }).catch(() => {
-        // Si falla red y no hay cache, podrías retornar una página offline aquí
+      return cachedResponse || fetch(evt.request).catch(() => {
+        // Fallback si no hay red ni cache
       });
     })
   );
