@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-6G5JJXXBVZ"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6G5JJXXBVZ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
 
-  gtag('config', 'G-6G5JJXXBVZ');
-</script>
+    gtag('config', 'G-6G5JJXXBVZ');
+  </script>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -27,34 +28,37 @@
       appId: "1:941811183066:web:52e50760cab8bc538f64e3",
       measurementId: "G-ZKR9LEJ1XD"
     };
-    
+
     // Inicializar Firebase
     firebase.initializeApp(firebaseConfig);
     window.db = firebase.firestore();
-    
+
     // Analytics (Opcional)
     if (typeof firebase.analytics === 'function') {
       firebase.analytics();
     }
-    
+
     console.log("🔥 Firebase: MatePlay conectado correctamente");
   </script>
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MatePlay - Plataforma Educativa Gamificada</title>
-  <meta name="description" content="Juegos educativos interactivos para aprender y practicar fracciones: Pizza Rush, Tetris de Equivalencias y Chef Fracción.">
+  <meta name="description"
+    content="Juegos educativos interactivos para aprender y practicar fracciones: Pizza Rush, Tetris de Equivalencias y Chef Fracción.">
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#3498db">
   <link rel="apple-touch-icon" href="./assets/icon-192.png">
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="./css/estilos.css">
 </head>
+
 <body>
   <main class="container">
     <h1>MatePlay</h1>
-    <p style="text-align:center; color:#7f8c8d; font-weight:600; margin-top:-10px; margin-bottom:15px;">¡Aprendé jugando!</p>
-    
+    <p style="text-align:center; color:#7f8c8d; font-weight:600; margin-top:-10px; margin-bottom:15px;">¡Aprendé
+      jugando!</p>
+
     <!-- Contenedor para mensajes de éxito/error -->
     <div id="msj-container" class="notificacion-toast" aria-live="polite"></div>
 
@@ -64,63 +68,89 @@
         <p style="color:#7f8c8d; margin-top:5px; font-weight:600;">Plataforma Educativa Gamificada</p>
       </div>
       <div style="margin-bottom:20px;">
-        <label for="input-nombre-login" style="font-weight: bold; color: #2c3e50; display:block; margin-bottom:8px;">Tu Nombre:</label>
-        <input type="text" id="input-nombre-login" placeholder="Ej: Juan Pérez" maxlength="20" style="padding: 15px; font-size: 1.1rem; border-radius: 12px; border: 2px solid #bdc3c7; width:100%;">
+        <label for="input-nombre-login" style="font-weight: bold; color: #2c3e50; display:block; margin-bottom:8px;">Tu
+          Nombre:</label>
+        <input type="text" id="input-nombre-login" placeholder="Ej: Juan Pérez" maxlength="20"
+          style="padding: 15px; font-size: 1.1rem; border-radius: 12px; border: 2px solid #bdc3c7; width:100%;">
       </div>
       <div style="margin-bottom:25px;">
-        <label for="select-curso-login" style="font-weight: bold; color: #2c3e50; display:block; margin-bottom:8px;">Elegí tu curso:</label>
-        <select id="select-curso-login" style="padding: 15px; font-size: 1.1rem; border-radius: 12px; border: 2px solid #bdc3c7; width:100%;">
+        <label for="select-curso-login"
+          style="font-weight: bold; color: #2c3e50; display:block; margin-bottom:8px;">Elegí tu curso:</label>
+        <select id="select-curso-login"
+          style="padding: 15px; font-size: 1.1rem; border-radius: 12px; border: 2px solid #bdc3c7; width:100%;">
           <option value="">-- Seleccionar --</option>
           <option value="1ro">1ro</option>
           <option value="2do">2do</option>
           <option value="3ro">3ro</option>
         </select>
       </div>
-      <button id="btn-ingresar" onclick="window.ingresarApp()" style="width:100%; font-size:1.2rem; padding:15px; border-radius:12px; box-shadow: 0 4px 15px rgba(52,152,219,0.4);" disabled>🚀 Ingresar a Jugar</button>
-      <button onclick="abrirPanelDocente()" class="secundario" style="margin-top:20px; border: 2px solid var(--azul); color: var(--azul); font-weight:bold;">📋 Ver Clasificación Global</button>
+      <button id="btn-ingresar" onclick="window.ingresarApp()"
+        style="width:100%; font-size:1.2rem; padding:15px; border-radius:12px; box-shadow: 0 4px 15px rgba(52,152,219,0.4);"
+        disabled>🚀 Ingresar a Jugar</button>
+      <button onclick="abrirPanelDocente()" class="secundario"
+        style="margin-top:20px; border: 2px solid var(--azul); color: var(--azul); font-weight:bold;">📋 Ver
+        Clasificación Global</button>
     </div>
 
     <div class="card oculto" id="menu">
       <section>
-        <div style="display:flex; justify-content:space-between; align-items:center; background: linear-gradient(135deg, #ffffff, #f8f9fa); border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 2px solid #e0e6ed; margin-bottom: 20px;">
+        <div
+          style="display:flex; justify-content:space-between; align-items:center; background: linear-gradient(135deg, #ffffff, #f8f9fa); border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 2px solid #e0e6ed; margin-bottom: 20px;">
           <div style="display:flex; align-items:center; gap:15px;">
-            <div id="avatar-menu-container" style="width:60px; height:60px; background:rgba(0,0,0,0.05); border-radius:12px; position:relative; overflow:hidden;"></div>
+            <div id="avatar-menu-container"
+              style="width:80px; height:80px; background:rgba(0,0,0,0.05); border-radius:12px; position:relative;">
+            </div>
             <div>
-              <h2 style="margin:0; font-size: 1.3rem; color: var(--azul-oscuro);">¡Hola, <span id="display-nombre-menu"></span>!</h2>
+              <h2 style="margin:0; font-size: 1.3rem; color: var(--azul-oscuro);">¡Hola, <span
+                  id="display-nombre-menu"></span>!</h2>
               <p style="margin:0; color:#7f8c8d; font-weight: 600;">Curso: <span id="display-curso-menu"></span></p>
             </div>
           </div>
-          <button onclick="window.salirLogin()" class="secundario" style="margin: 0; padding: 8px 15px; font-size: 0.9rem; width: auto; border-color: #e74c3c; color: #e74c3c;">🚪 Salir</button>
+          <button onclick="window.salirLogin()" class="secundario"
+            style="margin: 0; padding: 8px 15px; font-size: 0.9rem; width: auto; border-color: #e74c3c; color: #e74c3c;">🚪
+            Salir</button>
         </div>
 
-        <div id="perfil-resumen" class="oculto" style="margin-top: 15px; background: linear-gradient(135deg, #ffffff, #f8f9fa); border-radius: 12px; padding: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 2px solid #e0e6ed;">
+        <div id="perfil-resumen" class="oculto"
+          style="margin-top: 15px; background: linear-gradient(135deg, #ffffff, #f8f9fa); border-radius: 12px; padding: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 2px solid #e0e6ed;">
         </div>
 
-        <div id="misiones-diarias" class="oculto" style="margin-top: 15px; background: #fff; border-radius: 12px; padding: 12px; border: 2px dashed #bdc3c7;">
+        <div id="misiones-diarias" class="oculto"
+          style="margin-top: 15px; background: #fff; border-radius: 12px; padding: 12px; border: 2px dashed #bdc3c7;">
         </div>
       </section>
       <section>
         <h2>1. Módulo Fracciones</h2>
         <button onclick="cargarJuego('pizza_rush')" aria-label="Jugar Pizza Rush">Pizza Rush - Disparador</button>
-        <button onclick="cargarJuego('tetris')" aria-label="Jugar Tetris de Equivalencias">Equivalencia Tetris - Práctica</button>
-        <button onclick="cargarJuego('arquitecto')" aria-label="Jugar Arquitecto de Cuerdas">Arquitecto - Concepto</button>
-        <button onclick="cargarJuego('porcentajes')" aria-label="Jugar Experto en Porcentajes">Porcentajes - Relación</button>
-        <button onclick="cargarJuego('chef_fraccion')" aria-label="Jugar Chef Fracción">Chef Fracción - Boss Final</button>
-        <button onclick="cargarJuego('combinados_fracciones')" aria-label="Jugar Cálculos Combinados Fracciones">🔬 Cálculos Combinados - Potencias y Raíces</button>
+        <button onclick="cargarJuego('tetris')" aria-label="Jugar Tetris de Equivalencias">Equivalencia Tetris -
+          Práctica</button>
+        <button onclick="cargarJuego('arquitecto')" aria-label="Jugar Arquitecto de Cuerdas">Arquitecto -
+          Concepto</button>
+        <button onclick="cargarJuego('porcentajes')" aria-label="Jugar Experto en Porcentajes">Porcentajes -
+          Relación</button>
+        <button onclick="cargarJuego('chef_fraccion')" aria-label="Jugar Chef Fracción">Chef Fracción - Boss
+          Final</button>
+        <button onclick="cargarJuego('combinados_fracciones')" aria-label="Jugar Cálculos Combinados Fracciones">🔬
+          Cálculos Combinados - Potencias y Raíces</button>
 
         <h2 style="margin-top:20px;">2. Módulo Enteros</h2>
         <button onclick="cargarJuego('ascensor_extremo')">Ascensor Extremo - Desplazamientos</button>
         <button onclick="cargarJuego('clima_loco')">Clima Loco - Contexto Real</button>
         <button onclick="cargarJuego('saldo_inteligente')">Saldo Inteligente - Finanzas</button>
         <button onclick="cargarJuego('zona_impacto')">Zona de Impacto - Regla de Signos</button>
-        <button onclick="cargarJuego('combinados_enteros')" aria-label="Jugar Cálculos Combinados Enteros">⚡ Cálculos Combinados - Potencias y Raíces</button>
+        <button onclick="cargarJuego('combinados_enteros')" aria-label="Jugar Cálculos Combinados Enteros">⚡ Cálculos
+          Combinados - Potencias y Raíces</button>
       </section>
-      <button onclick="verLogros()" id="btn-logros" class="secundario" style="margin-top:10px; border: 2px solid #f1c40f; color: #d4ac0d;">🏆 Mis Medallas</button>
-      <button onclick="abrirPanelDocente()" class="secundario" style="margin-top:20px; border: 2px solid var(--azul); color: var(--azul);">📋 Ver Clasificación</button>
+      <button onclick="verLogros()" id="btn-logros" class="secundario"
+        style="margin-top:10px; border: 2px solid #f1c40f; color: #d4ac0d;">🏆 Mis Medallas</button>
+      <button onclick="abrirPanelDocente()" class="secundario"
+        style="margin-top:20px; border: 2px solid var(--azul); color: var(--azul);">📋 Ver Clasificación</button>
       <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
       <div style="display:flex; gap:8px;">
-        <button onclick="exportarCSV()" class="secundario" style="margin:0; font-size:0.8rem; opacity:0.8;">📥 Exportar Clasificación (Excel)</button>
-        <button onclick="resetearTodo()" class="secundario" style="margin:0; font-size:0.8rem; opacity:0.8;">⚙️ Reiniciar Todo</button>
+        <button onclick="exportarCSV()" class="secundario" style="margin:0; font-size:0.8rem; opacity:0.8;">📥 Exportar
+          Clasificación (Excel)</button>
+        <button onclick="resetearTodo()" class="secundario" style="margin:0; font-size:0.8rem; opacity:0.8;">⚙️
+          Reiniciar Todo</button>
       </div>
     </div>
     <div class="card oculto" id="juego-container" role="region" aria-labelledby="titulo-juego">
@@ -137,8 +167,11 @@
     <div class="card oculto" id="panel-docente-container">
       <h2 style="color: var(--azul-oscuro); display: flex; align-items: center; gap: 8px;">📊 Clasificación</h2>
       <div style="margin: 15px 0 10px;">
-        <label for="filtro-curso-panel" style="font-size: 0.85rem; font-weight: 600; color: #7f8c8d; display: block; margin-bottom: 5px;">Filtrar por curso:</label>
-        <select id="filtro-curso-panel" onchange="abrirPanelDocente()" style="margin-bottom: 0; padding: 10px; font-size: 0.9rem; height: auto;">
+        <label for="filtro-curso-panel"
+          style="font-size: 0.85rem; font-weight: 600; color: #7f8c8d; display: block; margin-bottom: 5px;">Filtrar por
+          curso:</label>
+        <select id="filtro-curso-panel" onchange="abrirPanelDocente()"
+          style="margin-bottom: 0; padding: 10px; font-size: 0.9rem; height: auto;">
           <option value="todos">Todos los cursos</option>
           <option value="1ro">1ro</option>
           <option value="2do">2do</option>
@@ -150,41 +183,58 @@
     </div>
     <div class="card oculto" id="tienda-container">
       <h2 style="color:#f39c12; text-align:center;">🛒 Tienda MatePlay</h2>
-      <div id="saldo-tienda" style="text-align:center; font-size:1.2rem; font-weight:bold; margin-bottom:15px; color:#2c3e50;"></div>
-      
+      <div id="saldo-tienda"
+        style="text-align:center; font-size:1.2rem; font-weight:bold; margin-bottom:15px; color:#2c3e50;"></div>
+
       <div class="tienda-items" style="display:flex; flex-direction:column; gap:10px;">
-        <div style="border:2px solid #ecf0f1; border-radius:10px; padding:15px; display:flex; justify-content:space-between; align-items:center;">
+        <div
+          style="border:2px solid #ecf0f1; border-radius:10px; padding:15px; display:flex; justify-content:space-between; align-items:center;">
           <div style="flex:1;">
             <div style="font-weight:bold; font-size:1.05rem;">⏱️ +15 Segundos Extra</div>
-            <div style="font-size:0.8rem; color:#7f8c8d; margin-top:2px;">Usa este tiempo cuando agotes el límite gratuito.</div>
-            <div style="font-size:0.85rem; color:#2c3e50; font-weight:bold; margin-top:5px;">En inventario: <span id="inv-tiempo" style="color:#27ae60;">0</span></div>
+            <div style="font-size:0.8rem; color:#7f8c8d; margin-top:2px;">Usa este tiempo cuando agotes el límite
+              gratuito.</div>
+            <div style="font-size:0.85rem; color:#2c3e50; font-weight:bold; margin-top:5px;">En inventario: <span
+                id="inv-tiempo" style="color:#27ae60;">0</span></div>
           </div>
-          <button onclick="comprarPowerUp('tiempo', 100)" class="secundario" style="margin:0; width:auto; background:#f1c40f; color:#2c3e50; border:none; font-weight:bold; box-shadow:0 4px 0 #f39c12; padding:10px 15px;">🪙 100</button>
+          <button onclick="comprarPowerUp('tiempo', 100)" class="secundario"
+            style="margin:0; width:auto; background:#f1c40f; color:#2c3e50; border:none; font-weight:bold; box-shadow:0 4px 0 #f39c12; padding:10px 15px;">🪙
+            100</button>
         </div>
 
-        <div style="border:2px solid #ecf0f1; border-radius:10px; padding:15px; display:flex; justify-content:space-between; align-items:center;">
+        <div
+          style="border:2px solid #ecf0f1; border-radius:10px; padding:15px; display:flex; justify-content:space-between; align-items:center;">
           <div style="flex:1;">
             <div style="font-weight:bold; font-size:1.05rem;">⏭️ Saltear Ejercicio</div>
             <div style="font-size:0.8rem; color:#7f8c8d; margin-top:2px;">Pasa al siguiente ejercicio al instante.</div>
-            <div style="font-size:0.85rem; color:#2c3e50; font-weight:bold; margin-top:5px;">En inventario: <span id="inv-saltear" style="color:#27ae60;">0</span></div>
+            <div style="font-size:0.85rem; color:#2c3e50; font-weight:bold; margin-top:5px;">En inventario: <span
+                id="inv-saltear" style="color:#27ae60;">0</span></div>
           </div>
-          <button onclick="comprarPowerUp('saltear', 200)" class="secundario" style="margin:0; width:auto; background:#f1c40f; color:#2c3e50; border:none; font-weight:bold; box-shadow:0 4px 0 #f39c12; padding:10px 15px;">🪙 200</button>
+          <button onclick="comprarPowerUp('saltear', 200)" class="secundario"
+            style="margin:0; width:auto; background:#f1c40f; color:#2c3e50; border:none; font-weight:bold; box-shadow:0 4px 0 #f39c12; padding:10px 15px;">🪙
+            200</button>
         </div>
 
-        <div style="border:2px solid #ecf0f1; border-radius:10px; padding:15px; display:flex; justify-content:space-between; align-items:center;">
+        <div
+          style="border:2px solid #ecf0f1; border-radius:10px; padding:15px; display:flex; justify-content:space-between; align-items:center;">
           <div style="flex:1;">
             <div style="font-weight:bold; font-size:1.05rem;">🛡️ Escudo Anti-Error</div>
             <div style="font-size:0.8rem; color:#7f8c8d; margin-top:2px;">Perdona automáticamente tu primer fallo.</div>
-            <div style="font-size:0.85rem; color:#2c3e50; font-weight:bold; margin-top:5px;">En inventario: <span id="inv-escudo" style="color:#27ae60;">0</span></div>
+            <div style="font-size:0.85rem; color:#2c3e50; font-weight:bold; margin-top:5px;">En inventario: <span
+                id="inv-escudo" style="color:#27ae60;">0</span></div>
           </div>
-          <button onclick="comprarPowerUp('escudo', 300)" class="secundario" style="margin:0; width:auto; background:#f1c40f; color:#2c3e50; border:none; font-weight:bold; box-shadow:0 4px 0 #f39c12; padding:10px 15px;">🪙 300</button>
+          <button onclick="comprarPowerUp('escudo', 300)" class="secundario"
+            style="margin:0; width:auto; background:#f1c40f; color:#2c3e50; border:none; font-weight:bold; box-shadow:0 4px 0 #f39c12; padding:10px 15px;">🪙
+            300</button>
         </div>
       </div>
 
       <h2 style="color:#3498db; text-align:center; margin-top:25px;">👕 Vestidor de Mascota</h2>
-      <div id="avatar-preview-tienda" style="width:120px; height:120px; margin:0 auto 20px; background:rgba(255,255,255,0.5); border-radius:20px; border:3px solid #3498db; position:relative; overflow:hidden;"></div>
-      
-      <div id="tienda-accesorios" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:10px; margin-bottom:20px;">
+      <div id="avatar-preview-tienda"
+        style="width:120px; height:120px; margin:0 auto 20px; background:rgba(255,255,255,0.5); border-radius:20px; border:3px solid #3498db; position:relative;">
+      </div>
+
+      <div id="tienda-accesorios"
+        style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:10px; margin-bottom:20px;">
         <!-- Accesorios dinámicos aquí -->
       </div>
       <button class="secundario" onclick="volverMenu()" style="margin-top:20px;">← Volver al menú</button>
@@ -192,4 +242,5 @@
   </main>
   <script src="./js/game.js"></script>
 </body>
+
 </html>

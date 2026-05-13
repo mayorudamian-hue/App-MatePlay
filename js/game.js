@@ -755,9 +755,9 @@ function renderizarMateBot(containerId, data) {
   const botHandLayerHTML = data.hand !== 'none' ? `<div class="matebot-acc"><div class="acc-hand-${data.hand}">${handContent}</div></div>` : '';
 
   container.innerHTML = `
-    <div class="matebot">
+    <div class="matebot" style="overflow: visible;">
       ${hatHTML}
-      <div class="matebot-body" style="background: ${data.skin}">
+      <div class="matebot-body" style="background: ${data.skin}; position: relative;">
         <div class="matebot-face">
           <div class="matebot-eye"></div>
           <div class="matebot-eye"></div>
@@ -765,8 +765,8 @@ function renderizarMateBot(containerId, data) {
         <div class="matebot-mouth"></div>
         ${faceHTML}
         ${bodyHTML}
+        ${botHandLayerHTML}
       </div>
-      ${botHandLayerHTML}
     </div>
   `;
 }
@@ -3356,7 +3356,10 @@ function sincronizarConNube(xpData) {
 }
 
 async function obtenerRankingMensualCloud() {
-  if (!window.db) return [];
+  if (!window.db) {
+    console.warn("⚠️ Firebase no está configurado. El ranking no se mostrará.");
+    return [];
+  }
   try {
     const snapshot = await window.db.collection("ranking_mensual")
       .where("curso", "==", cursoSeleccionado)
@@ -3365,7 +3368,10 @@ async function obtenerRankingMensualCloud() {
       .get();
     return snapshot.docs.map(doc => doc.data());
   } catch (e) {
-    console.error("Error obteniendo ranking:", e);
+    console.error("❌ Error de Firebase al obtener ranking:", e.message);
+    if (e.message.includes("requires an index")) {
+      console.info("💡 Haz clic en el enlace de arriba para crear el índice necesario en tu consola de Firebase.");
+    }
     return [];
   }
 }
@@ -3381,7 +3387,8 @@ async function renderizarRankingSemanalDashboard() {
   if (viejo) viejo.remove();
 
   const rankingHTML = `
-    <div id="ranking-mensual-card" class="card" style="margin-top:20px; border:2px solid #9b59b6; background:rgba(243,235,255,0.3);">
+    <div id="ranking-mensual-card" class="card" style="margin-top:20px; border:2px solid #9b59b6; background:rgba(243,235,255,0.3); position:relative;">
+      <button onclick="renderizarRankingSemanalDashboard()" style="position:absolute; top:10px; right:10px; width:auto; padding:5px 10px; font-size:0.7rem; background:#8e44ad; color:white; border:none; border-radius:8px; cursor:pointer;">🔄 Actualizar</button>
       <h3 style="color:#8e44ad; margin-top:0; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
         🏆 Top del Mes (${cursoSeleccionado})
       </h3>
