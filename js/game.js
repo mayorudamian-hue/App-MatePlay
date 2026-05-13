@@ -293,6 +293,12 @@ function validarMenu() {
       `;
       perfilResumen.classList.remove('oculto');
       
+      // Mostrar Ranking Semanal
+      renderizarRankingSemanalDashboard();
+
+      // Verificar si la mascota debe estar triste por inactividad
+      setTimeout(verificarEstadoAnimoMascota, 500);
+
       const misionesCont = document.getElementById('misiones-diarias');
       if (misionesCont) {
         const mData = getMisionesDiarias();
@@ -771,6 +777,66 @@ function actualizarAvatarUI() {
   renderizarMateBot('avatar-preview-tienda', data);
 }
 
+function verificarEstadoAnimoMascota() {
+  const racha = getRachaData();
+  if (!racha.ultimaFecha) return;
+  
+  // Calcular diferencia de días
+  const ultima = new Date(racha.ultimaFecha + 'T12:00:00'); // Forzar mediodía para evitar errores de zona horaria
+  const hoy = new Date();
+  hoy.setHours(12, 0, 0, 0);
+  
+  const diffTime = Math.abs(hoy - ultima);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays >= 2) {
+    const contenedor = document.getElementById('avatar-menu-container');
+    if (contenedor) {
+      const bot = contenedor.querySelector('.matebot');
+      if (bot) {
+        bot.classList.add('sad');
+        // Evitar duplicar burbujas
+        if (!contenedor.querySelector('.matebot-bubble')) {
+          const bubble = document.createElement('div');
+          bubble.className = 'matebot-bubble';
+          bubble.textContent = '¡Te extrañé mucho! 🥺 ¿Jugamos un poco hoy?';
+          contenedor.appendChild(bubble);
+        }
+      }
+    }
+  } else {
+    // Quitar estado triste si volvió a jugar
+    const contenedor = document.getElementById('avatar-menu-container');
+    if (contenedor) {
+      const bot = contenedor.querySelector('.matebot');
+      if (bot) {
+        bot.classList.remove('sad');
+        
+        // Si no hay burbuja triste, a veces mostrar un mensaje motivador
+        if (!contenedor.querySelector('.matebot-bubble')) {
+          const frases = [
+            "¡Verás los resultados por tu esfuerzo!",
+            "¡Eres un crack de las mates! 🚀",
+            "¿Qué desafío venceremos hoy?",
+            "¡Me encanta tu estilo! ✨",
+            "¡Sigue así, el éxito te espera!"
+          ];
+          const fraseAleatoria = frases[Math.floor(Math.random() * frases.length)];
+          
+          const bubble = document.createElement('div');
+          bubble.className = 'matebot-bubble';
+          bubble.style.borderColor = '#27ae60'; // Verde para mensajes positivos
+          bubble.innerHTML = `<span>${fraseAleatoria}</span>`;
+          contenedor.appendChild(bubble);
+          
+          // Desaparecer mensaje feliz después de unos segundos
+          setTimeout(() => { if (bubble) bubble.remove(); }, 5000);
+        }
+      }
+    }
+  }
+}
+
 function renderizarTiendaAccesorios() {
   const container = document.getElementById('tienda-accesorios');
   if (!container) return;
@@ -837,6 +903,14 @@ window.equiparAccesorio = function(cat, val) {
   setAvatarData(data);
   reproducirSonido('encaje');
   actualizarUITienda();
+
+  // Trigger festejo visual en la tienda
+  const botPreview = document.querySelector('#avatar-preview-tienda .matebot');
+  if (botPreview) {
+    botPreview.classList.remove('celebrate');
+    void botPreview.offsetWidth; // Force reflow
+    botPreview.classList.add('celebrate');
+  }
 };
 
 // ── Sistema de XP y Logros ────────────────────────────────────
@@ -879,7 +953,19 @@ function logrosKey() { return `logros2_${nombreAlumno}_${cursoSeleccionado}`; }
 function partidasKey() { return `partidas_${nombreAlumno}_${cursoSeleccionado}`; }
 
 function getXPData() {
-  return JSON.parse(localStorage.getItem(xpKey())) || { total: 0, notasPerfectas: 0, sinErrores: 0 };
+  const data = JSON.parse(localStorage.getItem(xpKey())) || { total: 0, xpMensual: 0, ultimoMes: '', notasPerfectas: 0, sinErrores: 0 };
+  
+  // Lógica de reset mensual
+  const hoy = new Date();
+  const mesActual = `${hoy.getFullYear()}-${hoy.getMonth() + 1}`; // Ej: "2024-5"
+  
+  if (data.ultimoMes !== mesActual) {
+    // Aquí podríamos guardar el record del mes pasado antes de borrar
+    data.xpMensual = 0;
+    data.ultimoMes = mesActual;
+    localStorage.setItem(xpKey(), JSON.stringify(data));
+  }
+  return data;
 }
 function getLogrosDesbloqueados() {
   return JSON.parse(localStorage.getItem(logrosKey())) || [];
@@ -927,6 +1013,13 @@ function ganarXP(juego, notaNum, totalErrores, puntaje) {
     xpData.total += xpExtraMisiones;
     xpGanada += xpExtraMisiones;
   }
+
+  // Sumar a mensual
+  xpData.xpMensual = (xpData.xpMensual || 0) + xpGanada;
+  localStorage.setItem(xpKey(), JSON.stringify(xpData));
+
+  // Sincronizar con Firebase (Cloud)
+  sincronizarConNube(xpData);
   
   xpData.porJuego = xpData.porJuego || {};
   xpData.porJuego[juego] = (xpData.porJuego[juego] || 0) + xpGanada;
@@ -3246,4 +3339,65 @@ window.cambiarSigno = function(id, signo) {
   }
   el.focus();
 };
+
+// ── Sincronización y Ranking Cloud (Firebase) ──────────────────
+function sincronizarConNube(xpData) {
+  if (!window.db) return;
+  const docId = `${nombreAlumno}_${cursoSeleccionado}`.replace(/\s+/g, '_').toLowerCase();
+  window.db.collection("ranking_mensual").doc(docId).set({
+    nombre: nombreAlumno,
+    curso: cursoSeleccionado,
+    xpTotal: xpData.total,
+    xpMensual: xpData.xpMensual,
+    ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true }).then(() => {
+    console.log("☁️ Progreso mensual sincronizado");
+  }).catch(err => console.error("❌ Error sincronización:", err));
+}
+
+async function obtenerRankingMensualCloud() {
+  if (!window.db) return [];
+  try {
+    const snapshot = await window.db.collection("ranking_mensual")
+      .where("curso", "==", cursoSeleccionado)
+      .orderBy("xpMensual", "desc")
+      .limit(10)
+      .get();
+    return snapshot.docs.map(doc => doc.data());
+  } catch (e) {
+    console.error("Error obteniendo ranking:", e);
+    return [];
+  }
+}
+
+async function renderizarRankingSemanalDashboard() {
+  const rankingCont = document.getElementById('misiones-diarias');
+  if (!rankingCont) return;
+
+  const rankingData = await obtenerRankingMensualCloud();
+  
+  // Limpiar rankings anteriores
+  const viejo = document.getElementById('ranking-mensual-card');
+  if (viejo) viejo.remove();
+
+  const rankingHTML = `
+    <div id="ranking-mensual-card" class="card" style="margin-top:20px; border:2px solid #9b59b6; background:rgba(243,235,255,0.3);">
+      <h3 style="color:#8e44ad; margin-top:0; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
+        🏆 Top del Mes (${cursoSeleccionado})
+      </h3>
+      <div style="font-size:0.85rem;">
+        ${rankingData.length > 0 ? 
+          rankingData.map((u, i) => `
+            <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(0,0,0,0.05);">
+              <span>${i+1 === 1 ? '🥇' : i+1 === 2 ? '🥈' : i+1 === 3 ? '🥉' : i+1+'°'} <strong>${u.nombre}</strong></span>
+              <span style="font-weight:bold; color:#8e44ad;">${u.xpMensual} XP</span>
+            </div>
+          `).join('') : 
+          `<p style="color:#7f8c8d; font-style:italic; text-align:center;">${window.db ? "¡Sé el gran campeón del mes!" : "Ranking mensual disponible en la nube"}</p>`
+        }
+      </div>
+    </div>
+  `;
+  rankingCont.insertAdjacentHTML('afterend', rankingHTML);
+}
 
