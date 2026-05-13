@@ -430,11 +430,11 @@ window.exportarCSV = function() {
   setTimeout(() => URL.revokeObjectURL(url), 100);
 };
 
-window.abrirPanelDocente = function() {
+function abrirPanelDocente() {
+  const filtro = document.getElementById('filtro-curso-panel') ? document.getElementById('filtro-curso-panel').value : 'todos';
   const menu = document.getElementById('menu');
   const panel = document.getElementById('panel-docente-container');
   const contenido = document.getElementById('contenido-panel');
-  const filtro = document.getElementById('filtro-curso-panel') ? document.getElementById('filtro-curso-panel').value : 'todos';
 
   history.pushState({ view: 'docente' }, '');
   
@@ -506,6 +506,8 @@ window.abrirPanelDocente = function() {
   if (menu) menu.classList.add('oculto');
   if (panel) panel.classList.remove('oculto');
 };
+window.abrirPanelDocente = abrirPanelDocente;
+
 
 window.cerrarPanelDocente = function() {
   const panel = document.getElementById('panel-docente-container');
@@ -734,7 +736,7 @@ function renderizarMateBot(containerId, data) {
 
   const hatHTML = data.hat !== 'none' ? `<div class="matebot-acc"><div class="acc-hat-${data.hat}"></div></div>` : '';
   const bodyHTML = data.body !== 'none' ? `<div class="matebot-acc"><div class="acc-body-${data.body}"></div></div>` : '';
-  const handHTML = data.hand !== 'none' ? `<div class="matebot-acc"><div class="acc-hand-${data.hand}"></div></div>` : '';
+  // handHTML removido de aquí para evitar duplicación
   
   let faceHTML = '';
   if (data.glasses !== 'none') {
