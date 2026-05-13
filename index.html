@@ -17,6 +17,7 @@
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#3498db">
   <link rel="apple-touch-icon" href="./assets/icon-192.png">
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="./css/estilos.css">
 </head>
 <body>
@@ -52,9 +53,12 @@
     <div class="card oculto" id="menu">
       <section>
         <div style="display:flex; justify-content:space-between; align-items:center; background: linear-gradient(135deg, #ffffff, #f8f9fa); border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 2px solid #e0e6ed; margin-bottom: 20px;">
-          <div>
-            <h2 style="margin:0; font-size: 1.3rem; color: var(--azul-oscuro);">¡Hola, <span id="display-nombre-menu"></span>!</h2>
-            <p style="margin:0; color:#7f8c8d; font-weight: 600;">Curso: <span id="display-curso-menu"></span></p>
+          <div style="display:flex; align-items:center; gap:15px;">
+            <div id="avatar-menu-container" style="width:60px; height:60px; background:rgba(0,0,0,0.05); border-radius:12px; position:relative; overflow:hidden;"></div>
+            <div>
+              <h2 style="margin:0; font-size: 1.3rem; color: var(--azul-oscuro);">¡Hola, <span id="display-nombre-menu"></span>!</h2>
+              <p style="margin:0; color:#7f8c8d; font-weight: 600;">Curso: <span id="display-curso-menu"></span></p>
+            </div>
           </div>
           <button onclick="window.salirLogin()" class="secundario" style="margin: 0; padding: 8px 15px; font-size: 0.9rem; width: auto; border-color: #e74c3c; color: #e74c3c;">🚪 Salir</button>
         </div>
@@ -145,6 +149,13 @@
           </div>
           <button onclick="comprarPowerUp('escudo', 300)" class="secundario" style="margin:0; width:auto; background:#f1c40f; color:#2c3e50; border:none; font-weight:bold; box-shadow:0 4px 0 #f39c12; padding:10px 15px;">🪙 300</button>
         </div>
+      </div>
+
+      <h2 style="color:#3498db; text-align:center; margin-top:25px;">👕 Vestidor de Mascota</h2>
+      <div id="avatar-preview-tienda" style="width:120px; height:120px; margin:0 auto 20px; background:rgba(255,255,255,0.5); border-radius:20px; border:3px solid #3498db; position:relative; overflow:hidden;"></div>
+      
+      <div id="tienda-accesorios" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:10px; margin-bottom:20px;">
+        <!-- Accesorios dinámicos aquí -->
       </div>
       <button class="secundario" onclick="volverMenu()" style="margin-top:20px;">← Volver al menú</button>
     </div>

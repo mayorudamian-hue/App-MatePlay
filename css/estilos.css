@@ -301,4 +301,427 @@ button.secundario:active {
 .mp-slogan { margin-top: -10px; font-size: 1.2rem; color: #e65100; font-weight: 900; text-align: center; margin-bottom: 25px; animation: mpFadeIn 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 @keyframes mpFadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
+/* ── Mascota MateBot ── */
+.matebot {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.matebot-body {
+  width: 70%;
+  height: 70%;
+  border-radius: 20%;
+  position: relative;
+  box-shadow: inset -5px -5px 10px rgba(0,0,0,0.2), 5px 5px 15px rgba(0,0,0,0.1);
+  transition: background 0.5s ease;
+  z-index: 10;
+}
+
+.matebot-face {
+  position: absolute;
+  top: 30%;
+  left: 0;
+  width: 100%;
+  height: 40%;
+  display: flex;
+  justify-content: center;
+  gap: 15%;
+  z-index: 20;
+}
+
+.matebot-eye {
+  width: 15%;
+  height: 40%;
+  background: #2c3e50;
+  border-radius: 50%;
+  animation: parpadeo 4s infinite;
+}
+
+@keyframes parpadeo {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+.matebot-mouth {
+  position: absolute;
+  bottom: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30%;
+  height: 10%;
+  background: rgba(0,0,0,0.1);
+  border-radius: 20px;
+}
+
+/* Accesorios */
+.matebot-acc {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+}
+
+/* Hats */
+.acc-hat-viking {
+  position: absolute;
+  top: -15%;
+  width: 80%;
+  height: 40%;
+  background: #95a5a6;
+  border-radius: 50% 50% 0 0;
+  border: 4px solid #7f8c8d;
+}
+.acc-hat-viking::before, .acc-hat-viking::after {
+  content: ''; position: absolute; top: 0; width: 30%; height: 60%; background: #ecf0f1; border: 3px solid #bdc3c7;
+}
+.acc-hat-viking::before { left: -15%; border-radius: 100% 0 0 0; transform: rotate(-20deg); }
+.acc-hat-viking::after { right: -15%; border-radius: 0 100% 0 0; transform: rotate(20deg); }
+
+.acc-hat-crown {
+  position: absolute;
+  top: -25%;
+  width: 70%;
+  height: 40%;
+  background: #f1c40f;
+  clip-path: polygon(0% 100%, 100% 100%, 100% 0%, 80% 50%, 50% 0%, 20% 50%, 0% 0%);
+  border-bottom: 4px solid #d4ac0d;
+}
+
+.acc-hat-fedora {
+  position: absolute;
+  top: -10%;
+  width: 90%;
+  height: 30%;
+  background: #2c3e50;
+  border-radius: 5px;
+}
+.acc-hat-fedora::before {
+  content: ''; position: absolute; top: -70%; left: 15%; width: 70%; height: 100%; background: #2c3e50; border-radius: 10px 10px 0 0; border-bottom: 4px solid #e74c3c;
+}
+
+.acc-hat-chef {
+  position: absolute;
+  top: -35%;
+  width: 70%;
+  height: 50%;
+  background: #fff;
+  border-radius: 20px 20px 5px 5px;
+  border: 4px solid #ddd;
+  box-shadow: 0 -5px 10px rgba(0,0,0,0.05);
+}
+.acc-hat-chef::before {
+  content: ''; position: absolute; top: -20px; left: -10%; width: 120%; height: 40px; background: #fff; border-radius: 50%; border: 4px solid #ddd; border-bottom: none;
+}
+
+.acc-hat-magic {
+  position: absolute;
+  top: -45%;
+  width: 70%;
+  height: 60%;
+  background: #4b2c20;
+  clip-path: polygon(10% 100%, 90% 100%, 70% 0%, 30% 0%);
+  border-bottom: 8px solid #3d1e13;
+}
+.acc-hat-magic::after {
+  content: '★'; position: absolute; top: 10%; left: 50%; transform: translateX(-50%); color: #f1c40f; font-size: 1.5rem;
+}
+
+/* Glasses / Face / Face Items */
+.acc-glasses-cool {
+  position: absolute;
+  top: 30%;
+  width: 80%;
+  height: 25%;
+  display: flex;
+  gap: 5%;
+}
+.acc-glasses-cool::before, .acc-glasses-cool::after {
+  content: ''; flex: 1; background: #2c3e50; border-radius: 5px; border-bottom: 3px solid #34495e;
+}
+
+.acc-glasses-nerd {
+  position: absolute;
+  top: 30%;
+  width: 85%;
+  height: 30%;
+  display: flex;
+  gap: 10%;
+}
+.acc-glasses-nerd::before, .acc-glasses-nerd::after {
+  content: ''; flex: 1; border: 4px solid #2c3e50; background: rgba(255,255,255,0.2); border-radius: 5px;
+}
+
+.acc-glasses-scientist {
+  position: absolute;
+  top: 25%;
+  width: 90%;
+  height: 35%;
+  display: flex;
+  gap: 5%;
+}
+.acc-glasses-scientist::before, .acc-glasses-scientist::after {
+  content: ''; flex: 1; border: 6px solid #555; background: rgba(255,255,255,0.3); border-radius: 50%;
+}
+
+.acc-glasses-eyepatch {
+  position: absolute;
+  top: 30%;
+  left: 0;
+  width: 100%;
+  height: 30%;
+  display: flex;
+  justify-content: center;
+}
+.acc-glasses-eyepatch::before {
+  content: ''; width: 40%; height: 100%; background: #2c3e50; border-radius: 5px 5px 50% 50%; position: absolute; left: 15%;
+}
+.acc-glasses-eyepatch::after {
+  content: ''; position: absolute; top: 10px; width: 100%; height: 4px; background: #2c3e50; transform: rotate(-10deg);
+}
+
+.acc-face-mustache {
+  position: absolute;
+  top: 60%;
+  width: 40%;
+  height: 15%;
+  background: #333;
+  border-radius: 50px 50px 0 0;
+  clip-path: polygon(0% 100%, 50% 0%, 100% 100%);
+}
+
+.acc-face-sparkle {
+  position: absolute;
+  top: 30%;
+  width: 100%;
+  height: 40%;
+  display: flex;
+  justify-content: space-around;
+}
+.acc-face-sparkle::before, .acc-face-sparkle::after {
+  content: '✨'; font-size: 1.2rem; animation: sparkle-anim 1s infinite;
+}
+
+/* Body Items */
+.acc-body-labcoat {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 60%;
+  background: #fff;
+  border-radius: 0 0 15px 15px;
+  border: 2px solid #ddd;
+  z-index: 15;
+  clip-path: polygon(0% 0%, 40% 0%, 50% 40%, 60% 0%, 100% 0%, 100% 100%, 0% 100%);
+}
+.acc-body-labcoat::after {
+  content: '•••'; position: absolute; left: 52%; top: 40%; transform: rotate(90deg); font-size: 12px; color: #999; letter-spacing: 2px;
+}
+
+.acc-body-spacesuit {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 65%;
+  background: #ecf0f1;
+  border-radius: 0 0 15px 15px;
+  border: 4px solid #bdc3c7;
+  z-index: 15;
+}
+.acc-body-spacesuit::before {
+  content: '🚀'; position: absolute; left: 10%; top: 20%; font-size: 0.8rem;
+}
+.acc-body-spacesuit::after {
+  content: ''; position: absolute; top: 0; width: 100%; height: 20%; background: #3498db; opacity: 0.3;
+}
+
+.acc-body-jersey {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 55%;
+  background: #e74c3c;
+  border-radius: 0 0 15px 15px;
+  border-top: 6px solid #c0392b;
+  z-index: 15;
+}
+.acc-body-jersey::after {
+  content: '10'; position: absolute; left: 50%; top: 20%; transform: translateX(-50%); color: white; font-weight: 900; font-size: 1.2rem;
+}
+
+/* Hand Items */
+.acc-hand-pencil {
+  position: absolute;
+  right: -20%;
+  bottom: 10%;
+  width: 15%;
+  height: 60%;
+  background: #f1c40f;
+  border: 2px solid #d4ac0d;
+  border-radius: 5px;
+  transform: rotate(15deg);
+  z-index: 25;
+}
+.acc-hand-pencil::before {
+  content: ''; position: absolute; top: -10px; left: 0; width: 100%; height: 10px; background: #edbb99; clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+.acc-hand-pencil::after {
+  content: ''; position: absolute; top: -10px; left: 35%; width: 30%; height: 4px; background: #333; border-radius: 50%;
+}
+
+.acc-hand-pen {
+  position: absolute;
+  right: -15%;
+  bottom: 10%;
+  width: 10%;
+  height: 55%;
+  background: #3498db;
+  border: 2px solid #2980b9;
+  border-radius: 3px;
+  transform: rotate(10deg);
+  z-index: 25;
+}
+.acc-hand-pen::before {
+  content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 20%; background: #bdc3c7;
+}
+
+.acc-hand-hook {
+  position: absolute;
+  right: -25%;
+  bottom: 15%;
+  width: 30%;
+  height: 40%;
+  background: #7f8c8d;
+  clip-path: polygon(0% 100%, 40% 100%, 50% 0%, 100% 40%, 80% 60%, 40% 40%);
+  z-index: 25;
+  transform: rotate(20deg);
+}
+
+.acc-hand-rocket {
+  position: absolute;
+  right: -25%;
+  bottom: 10%;
+  font-size: 2.5rem;
+  z-index: 25;
+  transform: rotate(-15deg);
+}
+
+.acc-hand-trophy {
+  position: absolute;
+  right: -30%;
+  bottom: 5%;
+  font-size: 2.8rem;
+  z-index: 25;
+  filter: drop-shadow(0 4px 5px rgba(0,0,0,0.2));
+}
+
+/* More Hats */
+.acc-hat-pirate {
+  position: absolute;
+  top: -30%;
+  width: 110%;
+  height: 45%;
+  background: #2c3e50;
+  clip-path: polygon(0% 100%, 100% 100%, 80% 0%, 50% 20%, 20% 0%);
+}
+.acc-hat-pirate::after {
+  content: '☠️'; position: absolute; top: 40%; left: 50%; transform: translateX(-50%); font-size: 0.8rem;
+}
+
+.acc-hat-helmet {
+  position: absolute;
+  top: -15%;
+  width: 100%;
+  height: 110%;
+  border: 6px solid #bdc3c7;
+  border-radius: 30%;
+  background: rgba(52, 152, 219, 0.2);
+  z-index: 100;
+}
+
+.acc-hat-cap {
+  position: absolute;
+  top: -15%;
+  width: 90%;
+  height: 35%;
+  background: #e74c3c;
+  border-radius: 20px 20px 0 0;
+}
+.acc-hat-cap::after {
+  content: ''; position: absolute; bottom: 0; left: 80%; width: 40%; height: 8px; background: #c0392b; border-radius: 0 10px 10px 0;
+}
+
+@keyframes sparkle-anim { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } }
+
+/* Victory Mascot & Speech Bubble */
+.mascota-victoria-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+  animation: saltito-victoria 0.8s infinite;
+}
+
+@keyframes saltito-victoria {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(5deg); }
+}
+
+.burbuja-matebot {
+  background: white;
+  border: 3px solid #3498db;
+  border-radius: 20px;
+  padding: 12px 20px;
+  position: relative;
+  margin-bottom: 15px;
+  font-weight: 800;
+  color: #2c3e50;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  max-width: 200px;
+  text-align: center;
+}
+.burbuja-matebot::after {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 15px solid #3498db;
+}
+
+/* Items en Tienda */
+.item-accesorio {
+  background: rgba(255,255,255,0.8);
+  border-radius: 15px;
+  padding: 10px;
+  text-align: center;
+  border: 2px solid #eee;
+  transition: all 0.3s ease;
+}
+.item-accesorio.comprado { border-color: #2ecc71; background: #f0fff4; }
+.item-accesorio.equipado { border-color: #3498db; box-shadow: 0 0 10px rgba(52, 152, 219, 0.3); background: #ebf5fb; }
+.item-accesorio button { padding: 8px; font-size: 0.8rem; margin-top: 5px; }
+
+/* Streak Fire Animations */
+@keyframes flame-blue { 0% { text-shadow: 0 0 5px #3498db, 0 0 10px #3498db; transform: scale(1); } 100% { text-shadow: 0 0 10px #3498db, 0 0 20px #3498db; transform: scale(1.1); } }
+@keyframes flame-orange { 0% { text-shadow: 0 0 5px #e67e22, 0 0 15px #e67e22; transform: scale(1.1); } 100% { text-shadow: 0 0 15px #e67e22, 0 0 25px #e67e22; transform: scale(1.2); } }
+@keyframes flame-purple { 0% { text-shadow: 0 0 10px #9b59b6, 0 0 20px #9b59b6; transform: scale(1.2); } 100% { text-shadow: 0 0 20px #9b59b6, 0 0 35px #9b59b6; transform: scale(1.3); } }
+
+.streak-blue { animation: flame-blue 0.4s infinite alternate; color: #3498db; }
+.streak-orange { animation: flame-orange 0.3s infinite alternate; color: #e67e22; }
+.streak-purple { animation: flame-purple 0.2s infinite alternate; color: #9b59b6; }
+
+@keyframes mpFadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
 @media (max-width: 360px) { h1 { font-size: 1.8rem; } .card { padding: 20px; } button { padding: 14px; font-size: 15px; } }
