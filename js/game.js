@@ -736,7 +736,6 @@ function renderizarMateBot(containerId, data) {
 
   const hatHTML = data.hat !== 'none' ? `<div class="matebot-acc"><div class="acc-hat-${data.hat}"></div></div>` : '';
   const bodyHTML = data.body !== 'none' ? `<div class="matebot-acc"><div class="acc-body-${data.body}"></div></div>` : '';
-  // handHTML removido de aquí para evitar duplicación
   
   let faceHTML = '';
   if (data.glasses !== 'none') {
@@ -747,7 +746,7 @@ function renderizarMateBot(containerId, data) {
   }
 
   const handContent = data.hand === 'rocket' ? '🚀' : (data.hand === 'trophy' ? '🏆' : '');
-  const handHTML = data.hand !== 'none' ? `<div class="matebot-acc"><div class="acc-hand-${data.hand}">${handContent}</div></div>` : '';
+  const botHandLayerHTML = data.hand !== 'none' ? `<div class="matebot-acc"><div class="acc-hand-${data.hand}">${handContent}</div></div>` : '';
 
   container.innerHTML = `
     <div class="matebot">
@@ -761,7 +760,7 @@ function renderizarMateBot(containerId, data) {
         ${faceHTML}
         ${bodyHTML}
       </div>
-      ${handHTML}
+      ${botHandLayerHTML}
     </div>
   `;
 }
