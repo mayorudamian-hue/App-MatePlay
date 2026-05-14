@@ -1,5 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap');
 
+@keyframes mpFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes mpSlideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 :root {
   --azul: #ff9800;
   --azul-oscuro: #e65100;
@@ -350,6 +360,18 @@ button.secundario:active {
 
 .matebot.celebrate {
   animation: matebot-celebrate 0.5s ease-out;
+}
+
+.matebot.dance {
+  animation: matebot-dance 0.8s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+}
+
+@keyframes matebot-dance {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  20% { transform: translateY(-30px) rotate(-15deg); }
+  40% { transform: translateY(0) rotate(15deg); }
+  60% { transform: translateY(-20px) rotate(-10deg); }
+  80% { transform: translateY(0) rotate(10deg); }
 }
 
 @keyframes matebot-bob {

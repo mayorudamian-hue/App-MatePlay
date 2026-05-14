@@ -755,7 +755,7 @@ function renderizarMateBot(containerId, data) {
   const botHandLayerHTML = data.hand !== 'none' ? `<div class="matebot-acc"><div class="acc-hand-${data.hand}">${handContent}</div></div>` : '';
 
   container.innerHTML = `
-    <div class="matebot" style="overflow: visible;">
+    <div class="matebot" style="overflow: visible; cursor: pointer;" onclick="tocarMateBot(this)">
       ${hatHTML}
       <div class="matebot-body" style="background: ${data.skin}; position: relative;">
         <div class="matebot-face">
@@ -770,6 +770,41 @@ function renderizarMateBot(containerId, data) {
     </div>
   `;
 }
+
+window.tocarMateBot = function(el) {
+  if (el.classList.contains('dance')) return;
+  el.classList.add('dance');
+  
+  const frases = [
+    "¡Oye! ¡Eso me hace cosquillas! 😂",
+    "¡Eres el mejor de la clase! 🌟",
+    "¡Vamos a practicar fracciones! 🍕",
+    "¡Me encantan tus nuevos accesorios!",
+    "¡Sigue así, crack de los números!",
+    "¡Matemáticas = Superpoderes! 💪",
+    "¡Qué alegría verte de nuevo!",
+    "¡Pst! ¡Tienes un futuro brillante! ✨"
+  ];
+  const frase = frases[Math.floor(Math.random() * frases.length)];
+  
+  // Mostrar burbuja
+  const contenedor = el.parentElement;
+  if (contenedor) {
+    // Quitar burbuja previa si existe
+    const vieja = contenedor.querySelector('.matebot-bubble');
+    if (vieja) vieja.remove();
+    
+    const bubble = document.createElement('div');
+    bubble.className = 'matebot-bubble';
+    bubble.style.borderColor = '#3498db';
+    bubble.innerHTML = `<span>${frase}</span>`;
+    contenedor.appendChild(bubble);
+    
+    setTimeout(() => { if (bubble) bubble.remove(); }, 3500);
+  }
+  
+  setTimeout(() => el.classList.remove('dance'), 800);
+};
 
 function actualizarAvatarUI() {
   const data = getAvatarData();
@@ -854,11 +889,13 @@ function renderizarTiendaAccesorios() {
     let btnText = '';
     let btnClass = '';
     let onClick = '';
+    let styleBtn = '';
 
     if (isEquipped) {
-      btnText = 'Equipado';
+      btnText = 'Quitar';
       btnClass = 'secundario';
-      onClick = '';
+      onClick = `equiparAccesorio('${acc.cat}', 'none')`;
+      styleBtn = 'border-color: #e74c3c; color: #e74c3c;'; // Rojo para quitar
     } else if (isPurchased) {
       btnText = 'Equipar';
       onClick = `equiparAccesorio('${acc.cat}', '${acc.val}')`;
@@ -870,7 +907,7 @@ function renderizarTiendaAccesorios() {
     return `
       <div class="item-accesorio ${isPurchased ? 'comprado' : ''} ${isEquipped ? 'equipado' : ''}">
         <div style="font-weight:800; font-size:0.9rem;">${acc.nombre}</div>
-        <button onclick="${onClick}" ${isEquipped ? 'disabled' : ''} class="${btnClass}">${btnText}</button>
+        <button onclick="${onClick}" class="${btnClass}" style="${styleBtn || ''}">${btnText}</button>
       </div>
     `;
   }).join('');
@@ -3380,31 +3417,49 @@ async function renderizarRankingSemanalDashboard() {
   const rankingCont = document.getElementById('misiones-diarias');
   if (!rankingCont) return;
 
-  const rankingData = await obtenerRankingMensualCloud();
-  
-  // Limpiar rankings anteriores
-  const viejo = document.getElementById('ranking-mensual-card');
-  if (viejo) viejo.remove();
+  // Si ya hay un listener activo, lo cerramos para no duplicar (limpieza opcional)
+  if (window.unsubRanking) window.unsubRanking();
 
-  const rankingHTML = `
-    <div id="ranking-mensual-card" class="card" style="margin-top:20px; border:2px solid #9b59b6; background:rgba(243,235,255,0.3); position:relative;">
-      <button onclick="renderizarRankingSemanalDashboard()" style="position:absolute; top:10px; right:10px; width:auto; padding:5px 10px; font-size:0.7rem; background:#8e44ad; color:white; border:none; border-radius:8px; cursor:pointer;">🔄 Actualizar</button>
-      <h3 style="color:#8e44ad; margin-top:0; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
-        🏆 Top del Mes (${cursoSeleccionado})
-      </h3>
-      <div style="font-size:0.85rem;">
-        ${rankingData.length > 0 ? 
-          rankingData.map((u, i) => `
-            <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(0,0,0,0.05);">
-              <span>${i+1 === 1 ? '🥇' : i+1 === 2 ? '🥈' : i+1 === 3 ? '🥉' : i+1+'°'} <strong>${u.nombre}</strong></span>
-              <span style="font-weight:bold; color:#8e44ad;">${u.xpMensual} XP</span>
-            </div>
-          `).join('') : 
-          `<p style="color:#7f8c8d; font-style:italic; text-align:center;">${window.db ? "¡Sé el gran campeón del mes!" : "Ranking mensual disponible en la nube"}</p>`
-        }
-      </div>
-    </div>
-  `;
-  rankingCont.insertAdjacentHTML('afterend', rankingHTML);
+  if (!window.db) {
+    console.warn("⚠️ Firebase no configurado para Ranking Real-time");
+    return;
+  }
+
+  // Listener en tiempo real
+  window.unsubRanking = window.db.collection("ranking_mensual")
+    .where("curso", "==", cursoSeleccionado)
+    .orderBy("xpMensual", "desc")
+    .limit(10)
+    .onSnapshot((snapshot) => {
+      const rankingData = snapshot.docs.map(doc => doc.data());
+      
+      const viejo = document.getElementById('ranking-mensual-card');
+      if (viejo) viejo.remove();
+
+      const rankingHTML = `
+        <div id="ranking-mensual-card" class="card" style="margin-top:20px; border:2px solid #9b59b6; background:rgba(243,235,255,0.3); position:relative; animation: mpFadeIn 0.5s ease;">
+          <div style="position:absolute; top:10px; right:10px; font-size:0.6rem; color:#8e44ad; font-weight:bold; display:flex; align-items:center; gap:4px;">
+            <span style="width:8px; height:8px; background:#2ecc71; border-radius:50%; display:inline-block; animation: matebot-bob 1s infinite;"></span> EN VIVO
+          </div>
+          <h3 style="color:#8e44ad; margin-top:0; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
+            🏆 Top del Mes (${cursoSeleccionado})
+          </h3>
+          <div style="font-size:0.85rem;">
+            ${rankingData.length > 0 ? 
+              rankingData.map((u, i) => `
+                <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(0,0,0,0.05); animation: mpSlideIn 0.3s ease forwards; animation-delay: ${i*0.05}s; opacity:0;">
+                  <span>${i+1 === 1 ? '🥇' : i+1 === 2 ? '🥈' : i+1 === 3 ? '🥉' : i+1+'°'} <strong>${u.nombre}</strong></span>
+                  <span style="font-weight:bold; color:#8e44ad;">${u.xpMensual} XP</span>
+                </div>
+              `).join('') : 
+              `<p style="color:#7f8c8d; font-style:italic; text-align:center;">¡Sé el gran campeón del mes!</p>`
+            }
+          </div>
+        </div>
+      `;
+      rankingCont.insertAdjacentHTML('afterend', rankingHTML);
+    }, (error) => {
+      console.error("❌ Error en listener de ranking:", error);
+    });
 }
 
