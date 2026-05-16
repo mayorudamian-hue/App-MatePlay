@@ -29,7 +29,15 @@ const EquaBalance = (function() {
         { id: '1-9', equation: '3c = 2c + 2', optimalMoves: 1, varSymbol: 'c' },
         { id: '1-10', equation: 'c - 5 = 1', optimalMoves: 1, varSymbol: 'c' },
         { id: '1-11', equation: '2a + 2 = a + 8', optimalMoves: 2, varSymbol: 'a' },
-        { id: '1-12', equation: '3a = 2a + 3', optimalMoves: 1, varSymbol: 'a' }
+        { id: '1-12', equation: '3a = 2a + 3', optimalMoves: 1, varSymbol: 'a' },
+        { id: '1-13', equation: 'm + 3 = 6', optimalMoves: 1, varSymbol: 'm' },
+        { id: '1-14', equation: '2m = m + 5', optimalMoves: 1, varSymbol: 'm' },
+        { id: '1-15', equation: '2m + 2 = m + 4', optimalMoves: 2, varSymbol: 'm' },
+        { id: '1-16', equation: 's - 2 = 3', optimalMoves: 1, varSymbol: 's' },
+        { id: '1-17', equation: '2s = s + 6', optimalMoves: 1, varSymbol: 's' },
+        { id: '1-18', equation: '3s = 2s + 5', optimalMoves: 1, varSymbol: 's' },
+        { id: '1-19', equation: 'c + 5 = 7', optimalMoves: 1, varSymbol: 'c' },
+        { id: '1-20', equation: '3a + 1 = 2a + 4', optimalMoves: 2, varSymbol: 'a' }
       ]
     },
     {
@@ -43,12 +51,20 @@ const EquaBalance = (function() {
         { id: '2-4', equation: 'x + 6 = -3', optimalMoves: 1, varSymbol: 'x' },
         { id: '2-5', equation: 'm + 2 = -4', optimalMoves: 1, varSymbol: 'm' },
         { id: '2-6', equation: 'x - 1 = -6', optimalMoves: 1, varSymbol: 'x' },
-        { id: '2-7', equation: 's + 5 = -2', optimalMoves: 1, varSymbol: 's' },
-        { id: '2-8', equation: 'x - 4 = -7', optimalMoves: 1, varSymbol: 'x' },
-        { id: '2-9', equation: 'm + 3 = 1', optimalMoves: 1, varSymbol: 'm' },
-        { id: '2-10', equation: 'x - 6 = -2', optimalMoves: 1, varSymbol: 'x' },
-        { id: '2-11', equation: 's + 7 = 3', optimalMoves: 1, varSymbol: 's' },
-        { id: '2-12', equation: 'x - 2 = -4', optimalMoves: 1, varSymbol: 'x' }
+        { id: '2-7', equation: '2x + 1 = x - 3', optimalMoves: 2, varSymbol: 'x' },
+        { id: '2-8', equation: '2m - 5 = m - 2', optimalMoves: 2, varSymbol: 'm' },
+        { id: '2-9', equation: '3s + 2 = 2s - 1', optimalMoves: 3, varSymbol: 's' },
+        { id: '2-10', equation: '2x - 2 = x - 6', optimalMoves: 2, varSymbol: 'x' },
+        { id: '2-11', equation: '3m - 4 = 2m + 1', optimalMoves: 3, varSymbol: 'm' },
+        { id: '2-12', equation: '2x + 5 = x + 1', optimalMoves: 2, varSymbol: 'x' },
+        { id: '2-13', equation: 's + 3 = -2', optimalMoves: 1, varSymbol: 's' },
+        { id: '2-14', equation: 'm - 4 = -1', optimalMoves: 1, varSymbol: 'm' },
+        { id: '2-15', equation: '2x + 3 = x - 2', optimalMoves: 2, varSymbol: 'x' },
+        { id: '2-16', equation: '2s - 1 = s - 5', optimalMoves: 2, varSymbol: 's' },
+        { id: '2-17', equation: '3x + 1 = 2x - 3', optimalMoves: 3, varSymbol: 'x' },
+        { id: '2-18', equation: '2m + 4 = m - 1', optimalMoves: 3, varSymbol: 'm' },
+        { id: '2-19', equation: '3s - 2 = 2s + 3', optimalMoves: 3, varSymbol: 's' },
+        { id: '2-20', equation: '2x - 3 = x - 7', optimalMoves: 2, varSymbol: 'x' }
       ]
     },
     {
@@ -67,7 +83,15 @@ const EquaBalance = (function() {
         { id: '3-9', equation: '3x + 2 = 14', optimalMoves: 2, varSymbol: 'x' },
         { id: '3-10', equation: '5x - 2 = 4x + 1', optimalMoves: 2, varSymbol: 'x' },
         { id: '3-11', equation: '4x = 2x + 6', optimalMoves: 2, varSymbol: 'x' },
-        { id: '3-12', equation: '3x + 5 = 2x + 8', optimalMoves: 2, varSymbol: 'x' }
+        { id: '3-12', equation: '3x + 5 = 2x + 8', optimalMoves: 2, varSymbol: 'x' },
+        { id: '3-13', equation: '3x - 3 = 9', optimalMoves: 2, varSymbol: 'x' },
+        { id: '3-14', equation: '5x + 2 = 3x + 10', optimalMoves: 3, varSymbol: 'x' },
+        { id: '3-15', equation: '2x + 5 = x + 2', optimalMoves: 3, varSymbol: 'x' },
+        { id: '3-16', equation: '4x - 4 = 2x + 2', optimalMoves: 4, varSymbol: 'x' },
+        { id: '3-17', equation: '3x + 4 = x + 8', optimalMoves: 4, varSymbol: 'x' },
+        { id: '3-18', equation: '4x + 1 = 3x - 2', optimalMoves: 2, varSymbol: 'x' },
+        { id: '3-19', equation: '2x - 5 = x - 3', optimalMoves: 3, varSymbol: 'x' },
+        { id: '3-20', equation: '3x + 3 = 12', optimalMoves: 2, varSymbol: 'x' }
       ]
     }
   ];
@@ -269,15 +293,66 @@ const EquaBalance = (function() {
     renderEndScreen() {
       const container = document.getElementById('contenido-juego');
       if (!container) return;
+
+      // Cálculo de bonificación: 3 minutos máximo para ganar bonificación
+      const timeBonus = Math.max(0, 180 - state.time) * 2; 
+      const totalXP = state.xp + timeBonus;
+
       container.innerHTML = `
-        <div class="eb-container" style="justify-content:center; align-items:center; text-align:center;">
-          <h2 style="color:var(--eb-success); font-size:2.5rem; font-family:var(--font-display);">¡Sincronización Completa! ✨</h2>
-          <p style="color:var(--eb-text); max-width:500px; font-size:1.1rem; line-height:1.5; margin: 20px 0;">"Bien hecho, Ren. Has estabilizado el sector... por ahora. Pero las anomalías siguen mutando. Mantente alerta."</p>
-          <p style="color:var(--eb-text-bright); font-size:1.2rem;">Rendimiento del Sincronizador: <span style="color:#f1c40f; font-weight:bold;">+${state.xp} XP</span></p>
-          <button class="eb-btn-action" id="eb-btn-end" style="margin-top:30px; font-size:1.2rem; padding:15px 30px; cursor:pointer;">Desconectar</button>
+        <div class="eb-container" style="justify-content:center; align-items:center; text-align:center; position: relative; overflow: hidden; height: 100%;">
+          <!-- Acelerador de Partículas (Fondo) -->
+          <div class="eb-particle-accelerator"></div>
+          
+          <h2 style="color:var(--eb-success); font-size:2.8rem; font-family:var(--font-display); z-index: 10; text-shadow: 0 0 15px rgba(158,206,106,0.5);">¡Sincronización Completa! ✨</h2>
+          <p style="color:var(--eb-text); max-width:500px; font-size:1.1rem; line-height:1.5; margin: 20px 0; z-index: 10;">"Bien hecho, Ren. El acelerador cuántico está asimilando la energía residual. Procesando rendimiento..."</p>
+          
+          <div style="background: rgba(26, 27, 38, 0.8); padding: 25px; border-radius: 12px; z-index: 10; border: 1px solid var(--eb-primary); min-width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+             <p style="color:var(--eb-text-bright); font-size:1.2rem; margin: 5px 0; display:flex; justify-content:space-between;"><span>XP Base:</span> <span style="color:#f1c40f; font-weight:bold;">${state.xp}</span></p>
+             <p style="color:var(--eb-text-bright); font-size:1.2rem; margin: 5px 0; display:flex; justify-content:space-between;"><span>Tiempo Residual:</span> <span id="eb-final-time" style="color:#7aa2f7; font-weight:bold;">${state.time}s</span></p>
+             <div style="margin-top: 15px; border-top: 1px solid #414868; padding-top: 15px;">
+                <p style="color:var(--eb-primary); font-size:1.5rem; margin: 0; font-weight:bold;">XP TOTAL</p>
+                <p id="eb-final-xp" style="color:#9ece6a; font-weight:bold; font-size: 3rem; margin: 5px 0; text-shadow: 0 0 20px rgba(158,206,106,0.6);">${state.xp}</p>
+             </div>
+          </div>
+          
+          <button class="eb-btn-action" id="eb-btn-end" style="margin-top:30px; font-size:1.2rem; padding:15px 40px; cursor:pointer; z-index: 10; display: none; background:var(--eb-primary); color:white; font-weight:bold;">Desconectar</button>
         </div>
       `;
-      document.getElementById('eb-btn-end').onclick = () => { if(state.onEndCallback) state.onEndCallback({ xp: state.xp, time: state.time }); };
+
+      let currentTime = state.time;
+      let currentXp = state.xp;
+      const timeSpan = document.getElementById('eb-final-time');
+      const xpSpan = document.getElementById('eb-final-xp');
+      const btnEnd = document.getElementById('eb-btn-end');
+
+      if (timeBonus > 0 && !state.evaluationMode) {
+        AudioEngine.play('combo_activate'); 
+        const tickInterval = setInterval(() => {
+          if (currentTime > 0 && currentXp < totalXP) {
+             currentTime -= 2; 
+             if (currentTime < 0) currentTime = 0;
+             currentXp += 5; 
+             if (currentXp > totalXP) currentXp = totalXP;
+             
+             timeSpan.textContent = currentTime + 's';
+             xpSpan.textContent = currentXp;
+             
+             AudioEngine.playTone(600 + (currentXp - state.xp)*3, 'sine', 0.05, 0.03);
+          } else {
+             clearInterval(tickInterval);
+             timeSpan.textContent = '0s (Bono Asimilado)';
+             xpSpan.textContent = totalXP;
+             AudioEngine.play('level_complete');
+             btnEnd.style.display = 'block';
+             state.xp = totalXP; 
+          }
+        }, 40);
+      } else {
+         timeSpan.textContent = state.time + 's (Sin bono)';
+         btnEnd.style.display = 'block';
+      }
+
+      btnEnd.onclick = () => { if(state.onEndCallback) state.onEndCallback({ xp: state.xp, time: state.time }); };
     },
 
     renderEvalSummary() {
@@ -375,15 +450,18 @@ const EquaBalance = (function() {
                 <button class="eb-btn-action" style="background:#3d59a1; padding:15px 0;" data-action="add" data-type="variable" data-value="-1" data-symbol="${currentSymbol}">-1 ${displaySym}</button>
               </div>
             ` : stage.id === 2 ? `
-              <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%;">
+              <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 100%;">
                 <button class="eb-btn-action" data-action="add" data-type="number" data-value="1">+1</button>
                 <button class="eb-btn-action" data-action="add" data-type="number" data-value="2">+2</button>
                 <button class="eb-btn-action" data-action="add" data-type="number" data-value="3">+3</button>
                 <button class="eb-btn-action" data-action="add" data-type="number" data-value="5">+5</button>
+                <button class="eb-btn-action" style="background:#3d59a1;" data-action="add" data-type="variable" data-value="1" data-symbol="${currentSymbol}">+${displaySym}</button>
+                
                 <button class="eb-btn-action" data-action="add" data-type="number" data-value="-1">-1</button>
                 <button class="eb-btn-action" data-action="add" data-type="number" data-value="-2">-2</button>
                 <button class="eb-btn-action" data-action="add" data-type="number" data-value="-3">-3</button>
                 <button class="eb-btn-action" data-action="add" data-type="number" data-value="-5">-5</button>
+                <button class="eb-btn-action" style="background:#3d59a1;" data-action="add" data-type="variable" data-value="-1" data-symbol="${currentSymbol}">-${displaySym}</button>
               </div>
             ` : `
               <div style="display:flex; flex-direction:column; gap:8px; width: 100%;">
