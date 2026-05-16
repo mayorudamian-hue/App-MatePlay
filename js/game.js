@@ -425,7 +425,7 @@ window.cargarEquaBalance = function(isEval = false) {
   contenido.innerHTML = '';
   
   if (window.EquaBalanceApp) {
-    window.EquaBalanceApp.iniciar({ evaluationMode: isEval }, (resultados) => {
+    window.EquaBalanceApp.iniciar({ evaluationMode: isEval, curso: cursoSeleccionado }, (resultados) => {
        volverMenu();
        mostrarMensaje(isEval ? 'Evaluación completada' : '¡Módulo completado con éxito!', 'exito');
        if (isEval && resultados && resultados.history) {

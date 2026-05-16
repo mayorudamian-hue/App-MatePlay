@@ -14,30 +14,60 @@ const EquaBalance = (function() {
   // --- DATOS DE NIVELES ---
   const stages = [
     {
-      id: 1, name: "1° Año: El Objeto Misterioso", mechanics: "Descubre qué valor esconde el objeto. Usa la balanza para dejarlo completamente solo.",
+      id: 1, 
+      name: "Acto 1: El Desajuste Físico", 
+      mechanics: `"Escucha, Ren. Las masas en el Muelle 4 están fluctuando. Hay contenedores corruptos desestabilizando los pilares. Usa tu Sincronización: extrae el mismo peso de ambos lados para neutralizar la carga o la plataforma colapsará." — Cero`,
       levels: [
         { id: '1-1', equation: 'c + 1 = 3', optimalMoves: 1, varSymbol: 'c' },
         { id: '1-2', equation: 'c + 2 = 5', optimalMoves: 1, varSymbol: 'c' },
         { id: '1-3', equation: 'a - 1 = 4', optimalMoves: 1, varSymbol: 'a' },
-        { id: '1-4', equation: 'a - 3 = 1', optimalMoves: 1, varSymbol: 'a' }
+        { id: '1-4', equation: 'a - 3 = 1', optimalMoves: 1, varSymbol: 'a' },
+        { id: '1-5', equation: 'c + 4 = 6', optimalMoves: 1, varSymbol: 'c' },
+        { id: '1-6', equation: 'c - 2 = 5', optimalMoves: 1, varSymbol: 'c' },
+        { id: '1-7', equation: 'a + 3 = 7', optimalMoves: 1, varSymbol: 'a' },
+        { id: '1-8', equation: 'a - 4 = 2', optimalMoves: 1, varSymbol: 'a' },
+        { id: '1-9', equation: 'c + 5 = 9', optimalMoves: 1, varSymbol: 'c' },
+        { id: '1-10', equation: 'c - 5 = 1', optimalMoves: 1, varSymbol: 'c' },
+        { id: '1-11', equation: 'a + 2 = 8', optimalMoves: 1, varSymbol: 'a' },
+        { id: '1-12', equation: 'a - 2 = 3', optimalMoves: 1, varSymbol: 'a' }
       ]
     },
     {
-      id: 2, name: "2° Año: Transición Simbólica", mechanics: "Los matemáticos a veces usan objetos, pero a menudo usan letras, como la famosa X.",
+      id: 2, 
+      name: "Acto 2: Firmas de Energía", 
+      mechanics: `"Estás aprendiendo a ver el esqueleto del mundo, chico. La arquitectura de la red se está desangrando. Ya no son objetos físicos, es energía pura. Localiza los nodos fantasma (X) y cancela las polaridades opuestas." — Cero`,
       levels: [
         { id: '2-1', equation: 'm - 5 = -2', optimalMoves: 1, varSymbol: 'm' },
         { id: '2-2', equation: 'x + 4 = -1', optimalMoves: 1, varSymbol: 'x' },
         { id: '2-3', equation: 's - 3 = -5', optimalMoves: 1, varSymbol: 's' },
-        { id: '2-4', equation: 'x + 6 = -3', optimalMoves: 1, varSymbol: 'x' }
+        { id: '2-4', equation: 'x + 6 = -3', optimalMoves: 1, varSymbol: 'x' },
+        { id: '2-5', equation: 'm + 2 = -4', optimalMoves: 1, varSymbol: 'm' },
+        { id: '2-6', equation: 'x - 1 = -6', optimalMoves: 1, varSymbol: 'x' },
+        { id: '2-7', equation: 's + 5 = -2', optimalMoves: 1, varSymbol: 's' },
+        { id: '2-8', equation: 'x - 4 = -7', optimalMoves: 1, varSymbol: 'x' },
+        { id: '2-9', equation: 'm + 3 = 1', optimalMoves: 1, varSymbol: 'm' },
+        { id: '2-10', equation: 'x - 6 = -2', optimalMoves: 1, varSymbol: 'x' },
+        { id: '2-11', equation: 's + 7 = 3', optimalMoves: 1, varSymbol: 's' },
+        { id: '2-12', equation: 'x - 2 = -4', optimalMoves: 1, varSymbol: 'x' }
       ]
     },
     {
-      id: 3, name: "3° Año: El Mundo de X", mechanics: "Notación algebraica formal. Aprende a agrupar variables y usar la división para resolver.",
+      id: 3, 
+      name: "Acto 3: El Código Fuente", 
+      mechanics: `"El Arquitecto intenta reescribir la constante. Las variables se han fragmentado en ambos espectros. Tu mente es el procesador ahora: consolida las firmas de energía (X) de un solo lado para purgar el sistema." — Cero`,
       levels: [
         { id: '3-1', equation: '2x = x + 3', optimalMoves: 1, varSymbol: 'x' },
         { id: '3-2', equation: '3x - 1 = 2x + 4', optimalMoves: 2, varSymbol: 'x' },
         { id: '3-3', equation: '2x + 2 = 8', optimalMoves: 2, varSymbol: 'x' },
-        { id: '3-4', equation: '4x - 2 = 3x + 3', optimalMoves: 2, varSymbol: 'x' }
+        { id: '3-4', equation: '4x - 2 = 3x + 3', optimalMoves: 2, varSymbol: 'x' },
+        { id: '3-5', equation: '5x = 4x + 6', optimalMoves: 1, varSymbol: 'x' },
+        { id: '3-6', equation: '3x + 1 = 2x + 5', optimalMoves: 2, varSymbol: 'x' },
+        { id: '3-7', equation: '4x - 3 = 2x + 5', optimalMoves: 3, varSymbol: 'x' },
+        { id: '3-8', equation: '2x - 4 = x - 1', optimalMoves: 2, varSymbol: 'x' },
+        { id: '3-9', equation: '3x + 2 = 14', optimalMoves: 2, varSymbol: 'x' },
+        { id: '3-10', equation: '5x - 2 = 4x + 1', optimalMoves: 2, varSymbol: 'x' },
+        { id: '3-11', equation: '4x = 2x + 6', optimalMoves: 2, varSymbol: 'x' },
+        { id: '3-12', equation: '3x + 5 = 2x + 8', optimalMoves: 2, varSymbol: 'x' }
       ]
     }
   ];
@@ -155,7 +185,8 @@ const EquaBalance = (function() {
     stageIdx: 0, levelIdx: 0, leftSide: [], rightSide: [],
     moves: 0, time: 0, xp: 0, combo: 1, timerId: null,
     draggedId: null, onEndCallback: null,
-    evaluationMode: false, evalHistory: []
+    evaluationMode: false, evalHistory: [],
+    currentStageLevels: []
   };
 
   // --- INTERFAZ (UI) ---
@@ -176,11 +207,15 @@ const EquaBalance = (function() {
       const stage = stages[state.stageIdx];
       
       container.innerHTML = `
-        <div class="eb-container" style="justify-content:center; align-items:center; text-align:center;">
-          <h1 style="color:var(--eb-primary); font-size:3rem; margin-bottom:10px; font-family:var(--font-display);">Etapa ${stage.id}</h1>
-          <h2 style="color:var(--eb-text-bright); font-size:2rem; margin-bottom:20px;">${stage.name}</h2>
-          <p style="color:var(--eb-text); max-width:500px; font-size:1.1rem; line-height:1.5;">${stage.mechanics}</p>
-          <button class="eb-btn-action" id="eb-btn-continue" style="margin-top:40px; padding:15px 40px; font-size:1.2rem; background:linear-gradient(135deg, var(--eb-primary), #3d59a1); border:none; cursor:pointer;">Comenzar Nivel</button>
+        <div class="eb-container" style="justify-content:center; align-items:center; text-align:center; background-color: var(--eb-bg); position:relative;">
+          <div style="position:absolute; top:20px; left:20px; color: var(--eb-primary); font-family: monospace; opacity: 0.7;">[ENLACE SEGURO ESTABLECIDO]</div>
+          <h1 style="color:var(--eb-primary); font-size:2.5rem; margin-bottom:10px; font-family:var(--font-display); text-transform: uppercase; letter-spacing: 2px;">${stage.name}</h1>
+          
+          <div style="background: var(--eb-surface); border-left: 4px solid var(--eb-primary); padding: 20px; margin: 30px auto; max-width: 600px; text-align: left; border-radius: 4px; box-shadow: 0 10px 30px var(--eb-shadow);">
+            <p style="color:var(--eb-text-bright); font-size:1.2rem; line-height:1.6; font-style: italic; margin: 0;">${stage.mechanics}</p>
+          </div>
+          
+          <button class="eb-btn-action" id="eb-btn-continue" style="margin-top:20px; padding:15px 40px; font-size:1.2rem; background:linear-gradient(135deg, var(--eb-primary), #3d59a1); border:none; cursor:pointer; color: white;">Iniciar Sincronización</button>
         </div>
       `;
       document.getElementById('eb-btn-continue').onclick = onContinue;
@@ -190,10 +225,11 @@ const EquaBalance = (function() {
       const container = document.getElementById('contenido-juego');
       if (!container) return;
       container.innerHTML = `
-        <div class="eb-container" style="justify-content:center; align-items:center;">
-          <h2 style="color:var(--eb-success); font-size:2rem; font-family:var(--font-display);">¡Módulo Completado! 🎉</h2>
-          <p style="color:var(--eb-text-bright); font-size:1.2rem;">Ganaste en total: <span style="color:#f1c40f; font-weight:bold;">${state.xp} XP</span></p>
-          <button class="eb-btn-action" id="eb-btn-end" style="margin-top:20px; font-size:1.2rem; padding:15px 30px; cursor:pointer;">Volver al Menú</button>
+        <div class="eb-container" style="justify-content:center; align-items:center; text-align:center;">
+          <h2 style="color:var(--eb-success); font-size:2.5rem; font-family:var(--font-display);">¡Sincronización Completa! ✨</h2>
+          <p style="color:var(--eb-text); max-width:500px; font-size:1.1rem; line-height:1.5; margin: 20px 0;">"Bien hecho, Ren. Has estabilizado el sector... por ahora. Pero las anomalías siguen mutando. Mantente alerta."</p>
+          <p style="color:var(--eb-text-bright); font-size:1.2rem;">Rendimiento del Sincronizador: <span style="color:#f1c40f; font-weight:bold;">+${state.xp} XP</span></p>
+          <button class="eb-btn-action" id="eb-btn-end" style="margin-top:30px; font-size:1.2rem; padding:15px 30px; cursor:pointer;">Desconectar</button>
         </div>
       `;
       document.getElementById('eb-btn-end').onclick = () => { if(state.onEndCallback) state.onEndCallback({ xp: state.xp, time: state.time }); };
@@ -237,7 +273,7 @@ const EquaBalance = (function() {
       const container = document.getElementById('contenido-juego');
       if (!container) return;
       const stage = stages[state.stageIdx];
-      const level = stage ? stage.levels[state.levelIdx] : null;
+      const level = state.currentStageLevels[state.levelIdx];
 
       if (!stage || !level) return; // Should be handled by loadLevel
 
@@ -446,7 +482,16 @@ const EquaBalance = (function() {
   const Controller = {
     start(options, onEnd) {
       AudioEngine.init(); // Permiso de audio del usuario
-      state.stageIdx = 0;
+      
+      const curso = options?.curso || '3ro';
+      if (curso === '1ro') state.stageIdx = 0;
+      else if (curso === '2do') state.stageIdx = 1;
+      else state.stageIdx = 2; // 3ro por defecto
+      
+      // Preparar niveles aleatorios de la etapa correspondiente
+      const allLevels = stages[state.stageIdx].levels;
+      state.currentStageLevels = [...allLevels].sort(() => 0.5 - Math.random()).slice(0, 5); // 5 niveles por sesión
+      
       state.levelIdx = 0;
       state.time = 0;
       state.xp = 0;
@@ -472,13 +517,13 @@ const EquaBalance = (function() {
     
     loadLevel(isNewStage = false) {
       const stage = stages[state.stageIdx];
-      if (!stage) { 
+      if (!stage || state.currentStageLevels.length === 0) { 
         if (state.evaluationMode) UI.renderEvalSummary();
         else UI.renderEndScreen();
         return; 
       }
       
-      const level = stage.levels[state.levelIdx];
+      const level = state.currentStageLevels[state.levelIdx];
       const parsed = Engine.parseEquation(level.equation);
       state.leftSide = parsed.left;
       state.rightSide = parsed.right;
@@ -535,7 +580,7 @@ const EquaBalance = (function() {
         AudioEngine.play('level_complete');
         UI.render(); // Asegurar que el último movimiento se dibuje
         
-        const level = stages[state.stageIdx].levels[state.levelIdx];
+        const level = state.currentStageLevels[state.levelIdx];
         const isPerfect = state.moves <= level.optimalMoves;
         
         // Guardar historial para evaluación
@@ -564,10 +609,11 @@ const EquaBalance = (function() {
         setTimeout(() => {
           state.levelIdx++;
           let isNewStage = false;
-          if (state.levelIdx >= stages[state.stageIdx].levels.length) {
-            state.levelIdx = 0;
-            state.stageIdx++;
-            isNewStage = true;
+          if (state.levelIdx >= state.currentStageLevels.length) {
+            // El alumno solo juega la etapa correspondiente a su curso
+            if (state.evaluationMode) UI.renderEvalSummary();
+            else UI.renderEndScreen();
+            return;
           }
           this.loadLevel(isNewStage);
         }, 1500);
