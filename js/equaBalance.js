@@ -22,14 +22,14 @@ const EquaBalance = (function() {
         { id: '1-2', equation: 'c + 2 = 5', optimalMoves: 1, varSymbol: 'c' },
         { id: '1-3', equation: 'a - 1 = 4', optimalMoves: 1, varSymbol: 'a' },
         { id: '1-4', equation: 'a - 3 = 1', optimalMoves: 1, varSymbol: 'a' },
-        { id: '1-5', equation: 'c + 4 = 6', optimalMoves: 1, varSymbol: 'c' },
-        { id: '1-6', equation: 'c - 2 = 5', optimalMoves: 1, varSymbol: 'c' },
-        { id: '1-7', equation: 'a + 3 = 7', optimalMoves: 1, varSymbol: 'a' },
+        { id: '1-5', equation: '2c = c + 4', optimalMoves: 1, varSymbol: 'c' },
+        { id: '1-6', equation: '2c + 1 = c + 5', optimalMoves: 2, varSymbol: 'c' },
+        { id: '1-7', equation: '2a = a + 3', optimalMoves: 1, varSymbol: 'a' },
         { id: '1-8', equation: 'a - 4 = 2', optimalMoves: 1, varSymbol: 'a' },
-        { id: '1-9', equation: 'c + 5 = 9', optimalMoves: 1, varSymbol: 'c' },
+        { id: '1-9', equation: '3c = 2c + 2', optimalMoves: 1, varSymbol: 'c' },
         { id: '1-10', equation: 'c - 5 = 1', optimalMoves: 1, varSymbol: 'c' },
-        { id: '1-11', equation: 'a + 2 = 8', optimalMoves: 1, varSymbol: 'a' },
-        { id: '1-12', equation: 'a - 2 = 3', optimalMoves: 1, varSymbol: 'a' }
+        { id: '1-11', equation: '2a + 2 = a + 8', optimalMoves: 2, varSymbol: 'a' },
+        { id: '1-12', equation: '3a = 2a + 3', optimalMoves: 1, varSymbol: 'a' }
       ]
     },
     {
@@ -199,6 +199,14 @@ const EquaBalance = (function() {
         's': ["Cero: ¡Cuidado! Un núcleo de poder (⭐) se salió de control. Aísla la estrella."],
         'x': ["Cero: Filtrando firmas fantasma [X]... Aísla la anomalía de la red.", "Cero: El código fuente está fragmentado. Consolida las variables [X]."]
       };
+
+      const dynamicLoadTwoVars = {
+        'c': ["Cero: Hay contenedores en ambos muelles. Inyecta Antimateria (-📦) en los dos lados para anular el exceso."],
+        'a': ["Cero: ¡Múltiples criaturas en los dos lados! Envía una anti-criatura (-👾) a ambos lados para cancelar."],
+        'm': ["Sistema: Masa biológica detectada en ambos polos. Aplique antimateria biológica a ambos polos."],
+        's': ["Cero: Núcleos estelares en conflicto a ambos lados. Anula uno inyectando una anti-estrella en ambos lados."],
+        'x': ["Cero: Variables duplicadas en ambos espectros. Resta la variable de ambos lados para unificarlas."]
+      };
       
       const dynamicWin = {
         'c': ["Ren: Zona despejada. Hemos recuperado el contenedor.", "Cero: Bien hecho. La caja está aislada."],
@@ -218,6 +226,7 @@ const EquaBalance = (function() {
 
       let pool = ["Sistema en línea."];
       if (event === 'load') pool = dynamicLoad[symbol] || dynamicLoad['x'];
+      if (event === 'load_two_vars') pool = dynamicLoadTwoVars[symbol] || dynamicLoadTwoVars['x'];
       if (event === 'win') pool = dynamicWin[symbol] || dynamicWin['x'];
       if (event === 'fail') pool = dynamicFail[symbol] || dynamicFail['x'];
       
@@ -336,8 +345,8 @@ const EquaBalance = (function() {
             </div>
           </div>
           
-          <div id="eb-commlink" style="background: rgba(0,0,0,0.4); border-left: 3px solid var(--eb-primary); margin-bottom: 15px; padding: 10px 15px; border-radius: 4px; font-family: monospace; color: var(--eb-text-bright); min-height: 44px; display: flex; align-items: flex-start; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); line-height: 1.4;">
-             <span style="color:var(--eb-primary); margin-right: 10px; font-weight:bold; margin-top: 2px;">></span> <span id="eb-commlink-text" style="word-wrap: break-word; flex: 1;">Conectando...</span>
+          <div id="eb-commlink" style="background: rgba(0,0,0,0.4); border-left: 3px solid var(--eb-primary); margin-bottom: 15px; padding: 12px 15px; border-radius: 4px; font-family: monospace; color: var(--eb-text-bright); min-height: 60px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); line-height: 1.5; font-size: 0.95rem;">
+             <span style="color:var(--eb-primary); margin-right: 5px; font-weight:bold;">></span><span id="eb-commlink-text" style="word-wrap: break-word;">Conectando...</span>
           </div>
           
           <div id="eb-board" class="eb-balance-board">
@@ -359,24 +368,46 @@ const EquaBalance = (function() {
           
           <div class="eb-action-panel">
             ${stage.id === 1 ? `
-              <button class="eb-btn-action" data-action="add" data-type="number" data-value="1">+1 Ambos Lados</button>
-              <button class="eb-btn-action" data-action="add" data-type="number" data-value="-1">-1 Ambos Lados</button>
+              <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; max-width:500px; margin: 0 auto;">
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="1" style="padding:15px 0;">+1 Unidad</button>
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="-1" style="padding:15px 0;">-1 Unidad</button>
+                <button class="eb-btn-action" style="background:#3d59a1; padding:15px 0;" data-action="add" data-type="variable" data-value="1" data-symbol="${currentSymbol}">+1 ${displaySym}</button>
+                <button class="eb-btn-action" style="background:#3d59a1; padding:15px 0;" data-action="add" data-type="variable" data-value="-1" data-symbol="${currentSymbol}">-1 ${displaySym}</button>
+              </div>
             ` : stage.id === 2 ? `
-              <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%;">
-                <button class="eb-btn-action" data-action="add" data-type="number" data-value="1">+1 Ambos</button>
-                <button class="eb-btn-action" data-action="add" data-type="number" data-value="2">+2 Ambos</button>
-                <button class="eb-btn-action" data-action="add" data-type="number" data-value="3">+3 Ambos</button>
-                <button class="eb-btn-action" data-action="add" data-type="number" data-value="5">+5 Ambos</button>
-                <button class="eb-btn-action" data-action="add" data-type="number" data-value="-1">-1 Ambos</button>
-                <button class="eb-btn-action" data-action="add" data-type="number" data-value="-2">-2 Ambos</button>
-                <button class="eb-btn-action" data-action="add" data-type="number" data-value="-3">-3 Ambos</button>
-                <button class="eb-btn-action" data-action="add" data-type="number" data-value="-5">-5 Ambos</button>
+              <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%;">
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="1">+1</button>
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="2">+2</button>
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="3">+3</button>
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="5">+5</button>
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="-1">-1</button>
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="-2">-2</button>
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="-3">-3</button>
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="-5">-5</button>
               </div>
             ` : `
-              <div style="display:flex; gap:10px; width:100%; align-items:center; background: var(--eb-surface); padding: 10px; border-radius: 8px;">
-                <span style="color:var(--eb-primary); font-family:monospace; font-weight:bold;">> CMD:</span>
-                <input type="text" id="eb-custom-action-input" placeholder="Ej: 2, -3, x, -2x, /2" style="flex:1; padding: 12px; border-radius: 6px; border: 2px solid var(--eb-primary); background: var(--eb-bg); color: var(--eb-text-bright); font-family: monospace; font-size: 1.2rem; text-align:center; outline:none;">
-                <button class="eb-btn-action" id="eb-btn-custom-action" style="margin:0; background:var(--eb-primary); color:white; font-weight:bold; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(122,162,247,0.3);">Ejecutar</button>
+              <div style="display:flex; flex-direction:column; gap:8px; width: 100%;">
+                <div style="display:grid; grid-template-columns: repeat(6, 1fr); gap: 5px;">
+                  <button class="eb-btn-action" data-action="add" data-type="number" data-value="1" style="padding:10px 0; font-size:1rem;">+1</button>
+                  <button class="eb-btn-action" data-action="add" data-type="number" data-value="2" style="padding:10px 0; font-size:1rem;">+2</button>
+                  <button class="eb-btn-action" data-action="add" data-type="number" data-value="3" style="padding:10px 0; font-size:1rem;">+3</button>
+                  <button class="eb-btn-action" data-action="add" data-type="number" data-value="-1" style="padding:10px 0; font-size:1rem;">-1</button>
+                  <button class="eb-btn-action" data-action="add" data-type="number" data-value="-2" style="padding:10px 0; font-size:1rem;">-2</button>
+                  <button class="eb-btn-action" data-action="add" data-type="number" data-value="-3" style="padding:10px 0; font-size:1rem;">-3</button>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(6, 1fr); gap: 5px;">
+                  <button class="eb-btn-action" style="background:#3d59a1; padding:10px 0; font-size:1rem;" data-action="add" data-type="variable" data-value="1" data-symbol="${currentSymbol}">+${displaySym}</button>
+                  <button class="eb-btn-action" style="background:#3d59a1; padding:10px 0; font-size:1rem;" data-action="add" data-type="variable" data-value="2" data-symbol="${currentSymbol}">+2${displaySym}</button>
+                  <button class="eb-btn-action" style="background:#3d59a1; padding:10px 0; font-size:1rem;" data-action="add" data-type="variable" data-value="3" data-symbol="${currentSymbol}">+3${displaySym}</button>
+                  <button class="eb-btn-action" style="background:#3d59a1; padding:10px 0; font-size:1rem;" data-action="add" data-type="variable" data-value="-1" data-symbol="${currentSymbol}">-${displaySym}</button>
+                  <button class="eb-btn-action" style="background:#3d59a1; padding:10px 0; font-size:1rem;" data-action="add" data-type="variable" data-value="-2" data-symbol="${currentSymbol}">-2${displaySym}</button>
+                  <button class="eb-btn-action" style="background:#3d59a1; padding:10px 0; font-size:1rem;" data-action="add" data-type="variable" data-value="-3" data-symbol="${currentSymbol}">-3${displaySym}</button>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 5px;">
+                  <button class="eb-btn-action divide" data-action="div" data-value="2" style="padding:10px 0; font-size:1rem;">÷2 Ambos Lados</button>
+                  <button class="eb-btn-action divide" data-action="div" data-value="3" style="padding:10px 0; font-size:1rem;">÷3 Ambos Lados</button>
+                  <button class="eb-btn-action divide" data-action="div" data-value="4" style="padding:10px 0; font-size:1rem;">÷4 Ambos Lados</button>
+                </div>
               </div>
             `}
           </div>
@@ -405,7 +436,7 @@ const EquaBalance = (function() {
     },
 
     attachEvents() {
-      // Botones de acción estándar (Etapas 1 y 2)
+      // Botones de acción estándar
       document.querySelectorAll('.eb-btn-action[data-action]').forEach(btn => {
         btn.onclick = (e) => {
           const action = e.currentTarget.dataset.action;
@@ -418,49 +449,6 @@ const EquaBalance = (function() {
           }
         };
       });
-
-      // Lógica de comando manual (Etapa 3)
-      const customInput = document.getElementById('eb-custom-action-input');
-      const customBtn = document.getElementById('eb-btn-custom-action');
-      if (customInput && customBtn) {
-        const executeCmd = () => {
-           const val = customInput.value.trim().toLowerCase();
-           if (!val) return;
-           
-           if (val.startsWith('/') || val.startsWith(':')) {
-              const num = parseInt(val.substring(1));
-              if (!isNaN(num) && num !== 0) {
-                 Controller.divideBothSides(num);
-                 customInput.value = '';
-              } else {
-                 UI.showCommlinkMessage("Sistema: Divisor inválido.", true);
-              }
-           } else {
-              let type = 'number';
-              let numVal = 1;
-              let sym = 'x';
-              
-              if (val.includes('x')) {
-                 type = 'variable';
-                 const numStr = val.replace(/x/g, '').trim();
-                 if (numStr === '-') numVal = -1;
-                 else if (numStr === '' || numStr === '+') numVal = 1;
-                 else numVal = parseInt(numStr);
-              } else {
-                 numVal = parseInt(val);
-              }
-              
-              if (!isNaN(numVal)) {
-                 Controller.actionBothSides(type, numVal, sym);
-                 customInput.value = ''; 
-              } else {
-                 UI.showCommlinkMessage("Sistema: Comando no reconocido.", true);
-              }
-           }
-        };
-        customBtn.onclick = executeCmd;
-        customInput.onkeypress = (e) => { if(e.key === 'Enter') executeCmd(); };
-      }
 
       // Eventos Drag & Drop
       document.querySelectorAll('.eb-term-block').forEach(b => {
@@ -541,25 +529,42 @@ const EquaBalance = (function() {
     },
     
     createParticles(x, y) {
-      const container = document.getElementById('eb-board');
-      if (!container) return;
-      const rect = container.getBoundingClientRect();
-      const relX = x - rect.left;
-      const relY = y - rect.top;
-      
-      for(let i=0; i<10; i++) {
+      // Onda de choque (Shockwave)
+      const wave = document.createElement('div');
+      wave.className = 'eb-shockwave';
+      wave.style.left = x + 'px';
+      wave.style.top = y + 'px';
+      document.body.appendChild(wave);
+      setTimeout(() => wave.remove(), 500);
+
+      // Partículas esparcidas y símbolos
+      const symbols = ['+', '-', 'x', '✨', '⚡'];
+      for (let i = 0; i < 20; i++) {
         const p = document.createElement('div');
-        p.className = 'eb-particle';
-        p.style.left = relX + 'px';
-        p.style.top = relY + 'px';
+        
+        if (i % 4 === 0) {
+           p.className = 'eb-particle-text';
+           p.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+        } else {
+           p.className = 'eb-particle';
+           const colors = ['#7aa2f7', '#9ece6a', '#e0af68', '#ffffff'];
+           p.style.background = colors[Math.floor(Math.random() * colors.length)];
+           p.style.boxShadow = `0 0 10px ${p.style.background}`;
+        }
+        
+        p.style.left = x + 'px';
+        p.style.top = y + 'px';
         
         const angle = Math.random() * Math.PI * 2;
-        const speed = 40 + Math.random() * 60;
-        p.style.setProperty('--tx', (Math.cos(angle) * speed) + 'px');
-        p.style.setProperty('--ty', (Math.sin(angle) * speed) + 'px');
+        const velocity = 30 + Math.random() * 80;
+        const tx = Math.cos(angle) * velocity;
+        const ty = Math.sin(angle) * velocity;
         
-        container.appendChild(p);
-        setTimeout(() => p.remove(), 600);
+        p.style.setProperty('--tx', `${tx}px`);
+        p.style.setProperty('--ty', `${ty}px`);
+        
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 800);
       }
     },
     
@@ -657,14 +662,17 @@ const EquaBalance = (function() {
       clearInterval(UI.typeInterval);
       UI.typeInterval = null; 
 
+      const hasVarBothSides = state.leftSide.some(t => t.type === 'variable') && state.rightSide.some(t => t.type === 'variable');
+      const eventType = hasVarBothSides ? 'load_two_vars' : 'load';
+
       if (isNewStage && !state.evaluationMode) {
         UI.renderStageIntro(() => { 
             UI.render(); 
-            UI.showCommlinkMessage(Narrator.getMessage(state.stageIdx, 'load', level.varSymbol)); 
+            UI.showCommlinkMessage(Narrator.getMessage(state.stageIdx, eventType, level.varSymbol)); 
         });
       } else {
         UI.render();
-        UI.showCommlinkMessage(Narrator.getMessage(state.stageIdx, 'load', level.varSymbol));
+        UI.showCommlinkMessage(Narrator.getMessage(state.stageIdx, eventType, level.varSymbol));
       }
     },
     
