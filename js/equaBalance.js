@@ -1,11 +1,11 @@
 // EquaBalanceVanilla.js
-// Implementación en Vanilla JS del Módulo EquaBalance para MatePlay
+// Implementación en Vanilla JS del Módulo EquaBalance para MatePlay - Fase 2
 
 const EquaBalance = (function() {
   // --- DATOS DE NIVELES ---
   const stages = [
     {
-      id: 1, name: "El Cofre Misterioso", mechanics: "Suma y resta simple, incógnita visual",
+      id: 1, name: "El Cofre Misterioso", mechanics: "El objetivo es dejar la incógnita (x) sola de un lado. Usa la balanza para sumar o restar lo mismo a ambos lados.",
       levels: [
         { id: '1-1', equation: 'x + 1 = 3', optimalMoves: 2 },
         { id: '1-2', equation: 'x + 2 = 5', optimalMoves: 2 },
@@ -14,7 +14,7 @@ const EquaBalance = (function() {
       ]
     },
     {
-      id: 2, name: "Positivos y Negativos", mechanics: "Cancelación visual, números enteros, negativos",
+      id: 2, name: "Positivos y Negativos", mechanics: "Cuidado, algunos bloques tienen energía inversa. Combínalos para cancelarlos visualmente.",
       levels: [
         { id: '2-1', equation: 'x - 5 = -2', optimalMoves: 2 },
         { id: '2-2', equation: 'x + 4 = -1', optimalMoves: 2 },
@@ -23,7 +23,7 @@ const EquaBalance = (function() {
       ]
     },
     {
-      id: 3, name: "El Mundo de X", mechanics: "Notación algebraica formal, coeficientes",
+      id: 3, name: "El Mundo de X", mechanics: "Ahora la incógnita puede estar multiplicada o de ambos lados. Agrupa las incógnitas antes de dividir.",
       levels: [
         { id: '3-1', equation: '2x = x + 3', optimalMoves: 2 },
         { id: '3-2', equation: '3x - 1 = 2x + 4', optimalMoves: 4 },
@@ -95,7 +95,8 @@ const EquaBalance = (function() {
   let state = {
     stageIdx: 0, levelIdx: 0, leftSide: [], rightSide: [],
     moves: 0, time: 0, xp: 0, combo: 1, timerId: null,
-    draggedId: null, onEndCallback: null
+    draggedId: null, onEndCallback: null,
+    evaluationMode: false, evalHistory: []
   };
 
   // --- INTERFAZ (UI) ---
@@ -109,24 +110,77 @@ const EquaBalance = (function() {
         document.head.appendChild(link);
       }
     },
+    
+    renderStageIntro(onContinue) {
+      const container = document.getElementById('contenido-juego');
+      if (!container) return;
+      const stage = stages[state.stageIdx];
+      
+      container.innerHTML = `
+        <div class="eb-container" style="justify-content:center; align-items:center; text-align:center;">
+          <h1 style="color:var(--eb-primary); font-size:3rem; margin-bottom:10px; font-family:var(--font-display);">Etapa ${stage.id}</h1>
+          <h2 style="color:var(--eb-text-bright); font-size:2rem; margin-bottom:20px;">${stage.name}</h2>
+          <p style="color:var(--eb-text); max-width:500px; font-size:1.1rem; line-height:1.5;">${stage.mechanics}</p>
+          <button class="eb-btn-action" id="eb-btn-continue" style="margin-top:40px; padding:15px 40px; font-size:1.2rem; background:linear-gradient(135deg, var(--eb-primary), #3d59a1); border:none; cursor:pointer;">Comenzar Nivel</button>
+        </div>
+      `;
+      document.getElementById('eb-btn-continue').onclick = onContinue;
+    },
+
+    renderEndScreen() {
+      const container = document.getElementById('contenido-juego');
+      if (!container) return;
+      container.innerHTML = `
+        <div class="eb-container" style="justify-content:center; align-items:center;">
+          <h2 style="color:var(--eb-success); font-size:2rem; font-family:var(--font-display);">¡Módulo Completado! 🎉</h2>
+          <p style="color:var(--eb-text-bright); font-size:1.2rem;">Ganaste en total: <span style="color:#f1c40f; font-weight:bold;">${state.xp} XP</span></p>
+          <button class="eb-btn-action" id="eb-btn-end" style="margin-top:20px; font-size:1.2rem; padding:15px 30px; cursor:pointer;">Volver al Menú</button>
+        </div>
+      `;
+      document.getElementById('eb-btn-end').onclick = () => { if(state.onEndCallback) state.onEndCallback({ xp: state.xp, time: state.time }); };
+    },
+
+    renderEvalSummary() {
+      const container = document.getElementById('contenido-juego');
+      if (!container) return;
+      
+      let correctCount = state.evalHistory.filter(h => h.correct).length;
+      
+      let rows = state.evalHistory.map(h => `
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+          <td style="padding:10px;">${h.levelId}</td>
+          <td style="padding:10px;">${h.moves}</td>
+          <td style="padding:10px;">${h.optimal}</td>
+          <td style="padding:10px; color:${h.correct ? 'var(--eb-success)' : 'var(--eb-warning)'};">${h.correct ? 'Óptimo' : 'Regular'}</td>
+        </tr>
+      `).join('');
+
+      container.innerHTML = `
+        <div class="eb-container" style="align-items:center;">
+          <h2 style="color:var(--eb-warning); font-size:2rem; font-family:var(--font-display); margin-top:20px;">Reporte de Evaluación 📋</h2>
+          <table style="width:100%; max-width:600px; margin-top:20px; border-collapse:collapse; color:var(--eb-text-bright);">
+            <tr style="border-bottom:2px solid var(--eb-board-line); text-align:left;">
+              <th style="padding:10px;">Nivel</th>
+              <th style="padding:10px;">Tus Movimientos</th>
+              <th style="padding:10px;">Mín. Posible</th>
+              <th style="padding:10px;">Desempeño</th>
+            </tr>
+            ${rows}
+          </table>
+          <p style="margin-top:20px; font-size:1.2rem; color:var(--eb-text);">Resolución Óptima: <strong style="color:var(--eb-primary);">${correctCount}/${state.evalHistory.length}</strong></p>
+          <button class="eb-btn-action" id="eb-btn-end" style="margin-top:30px; font-size:1.2rem; padding:15px 30px; cursor:pointer;">Finalizar Evaluación</button>
+        </div>
+      `;
+      document.getElementById('eb-btn-end').onclick = () => { if(state.onEndCallback) state.onEndCallback({ history: state.evalHistory, time: state.time }); };
+    },
+
     render() {
       const container = document.getElementById('contenido-juego');
       if (!container) return;
       const stage = stages[state.stageIdx];
       const level = stage ? stage.levels[state.levelIdx] : null;
 
-      if (!stage || !level) {
-        // Fin del módulo
-        container.innerHTML = `
-          <div class="eb-container" style="justify-content:center; align-items:center;">
-            <h2 style="color:var(--eb-success); font-size:2rem; font-family:var(--font-display);">¡Módulo Completado! 🎉</h2>
-            <p style="color:var(--eb-text-bright); font-size:1.2rem;">Ganaste en total: <span style="color:#f1c40f; font-weight:bold;">${state.xp} XP</span></p>
-            <button class="eb-btn-action" id="eb-btn-end" style="margin-top:20px; font-size:1.2rem; padding:15px 30px;">Volver al Menú</button>
-          </div>
-        `;
-        document.getElementById('eb-btn-end').onclick = () => { if(state.onEndCallback) state.onEndCallback({ xp: state.xp, time: state.time }); };
-        return;
-      }
+      if (!stage || !level) return; // Should be handled by loadLevel
 
       const formatTime = (s) => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
       
@@ -135,12 +189,16 @@ const EquaBalance = (function() {
           <div class="eb-hud">
             <div class="eb-hud-left">
               <h2 class="eb-stage-title">${stage.name} <span class="eb-level-id">(${level.id})</span></h2>
-              <div class="eb-moves">Movimientos: ${state.moves} <span class="eb-optimal">/ Óptimos: ${level.optimalMoves}</span></div>
+              ${!state.evaluationMode 
+                ? `<div class="eb-moves">Movimientos: ${state.moves} <span class="eb-optimal">/ Óptimos: ${level.optimalMoves}</span></div>` 
+                : `<div class="eb-moves" style="color:var(--eb-warning);">MODO EVALUACIÓN</div>`}
             </div>
             <div class="eb-hud-right">
               <div class="eb-timer" id="eb-timer-display">${formatTime(state.time)}</div>
-              <div class="eb-combo ${state.combo > 1 ? 'active' : ''}">Combo x${state.combo}</div>
-              <div class="eb-xp">XP: ${state.xp}</div>
+              ${!state.evaluationMode ? `
+                <div class="eb-combo ${state.combo > 1 ? 'active' : ''}">Combo x${state.combo}</div>
+                <div class="eb-xp">XP: ${state.xp}</div>
+              ` : ''}
             </div>
           </div>
           
@@ -156,7 +214,7 @@ const EquaBalance = (function() {
               <div class="eb-terms-container">${this.renderTerms(state.rightSide)}</div>
             </div>
             <div id="eb-celebration" class="oculto" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); z-index: 100; font-size: 3.5rem; color: var(--eb-success); border-radius: 16px; flex-direction:column;">
-              <div>¡Correcto! ✨</div>
+              <div id="eb-cel-title">¡Correcto! ✨</div>
               <div id="eb-earned-xp" style="font-size:1.5rem; color:#f1c40f; margin-top:10px;"></div>
             </div>
           </div>
@@ -227,9 +285,16 @@ const EquaBalance = (function() {
     
     showCelebration(earnedXP) {
       const cel = document.getElementById('eb-celebration');
+      const titleEl = document.getElementById('eb-cel-title');
       const xpEl = document.getElementById('eb-earned-xp');
-      if (cel && xpEl) {
-        xpEl.textContent = `+${earnedXP} XP`;
+      if (cel && xpEl && titleEl) {
+        if (!state.evaluationMode) {
+          titleEl.textContent = '¡Correcto! ✨';
+          xpEl.textContent = `+${earnedXP} XP`;
+        } else {
+          titleEl.textContent = '¡Registrado! 📝';
+          xpEl.textContent = '';
+        }
         cel.classList.remove('oculto');
       }
     },
@@ -245,16 +310,18 @@ const EquaBalance = (function() {
 
   // --- CONTROLADOR ---
   const Controller = {
-    start(onEnd) {
+    start(options, onEnd) {
       state.stageIdx = 0;
       state.levelIdx = 0;
       state.time = 0;
       state.xp = 0;
       state.combo = 1;
+      state.evaluationMode = options?.evaluationMode || false;
+      state.evalHistory = [];
       state.onEndCallback = onEnd;
       
       UI.initStyles();
-      this.loadLevel();
+      this.loadLevel(true); // true = es una nueva etapa, mostrar intro
       
       if (state.timerId) clearInterval(state.timerId);
       state.timerId = setInterval(() => {
@@ -268,15 +335,25 @@ const EquaBalance = (function() {
       if (state.timerId) clearInterval(state.timerId);
     },
     
-    loadLevel() {
+    loadLevel(isNewStage = false) {
       const stage = stages[state.stageIdx];
-      if (!stage) { UI.render(); return; }
+      if (!stage) { 
+        if (state.evaluationMode) UI.renderEvalSummary();
+        else UI.renderEndScreen();
+        return; 
+      }
+      
       const level = stage.levels[state.levelIdx];
       const parsed = Engine.parseEquation(level.equation);
       state.leftSide = parsed.left;
       state.rightSide = parsed.right;
       state.moves = 0;
-      UI.render();
+      
+      if (isNewStage && !state.evaluationMode) {
+        UI.renderStageIntro(() => { UI.render(); });
+      } else {
+        UI.render();
+      }
     },
     
     actionBothSides(type, value) {
@@ -319,31 +396,43 @@ const EquaBalance = (function() {
     checkWin() {
       if (Engine.checkSolved(state.leftSide, state.rightSide)) {
         if(window.reproducirSonido) window.reproducirSonido('exito');
-        UI.render(); // Ensure the board is up to date
+        UI.render(); // Asegurar que el último movimiento se dibuje
         
         const level = stages[state.stageIdx].levels[state.levelIdx];
         const isPerfect = state.moves <= level.optimalMoves;
-        const baseXP = 50;
-        const earnedXP = isPerfect ? baseXP * 2 * state.combo : baseXP * state.combo;
         
-        state.xp += earnedXP;
-        if(isPerfect) state.combo++;
-        else state.combo = 1;
+        // Guardar historial para evaluación
+        state.evalHistory.push({
+          levelId: level.id,
+          moves: state.moves,
+          optimal: level.optimalMoves,
+          correct: isPerfect
+        });
+
+        let earnedXP = 0;
+        if (!state.evaluationMode) {
+          const baseXP = 50;
+          earnedXP = isPerfect ? baseXP * 2 * state.combo : baseXP * state.combo;
+          state.xp += earnedXP;
+          if(isPerfect) state.combo++;
+          else state.combo = 1;
+
+          window.dispatchEvent(new CustomEvent('EQUABALANCE_SOLVED', { 
+            detail: { xpEarned: earnedXP, perfect: isPerfect }
+          }));
+        }
 
         UI.showCelebration(earnedXP);
 
-        // Integración con MatePlay: Disparar evento para que game.js lo guarde
-        window.dispatchEvent(new CustomEvent('EQUABALANCE_SOLVED', { 
-          detail: { xpEarned: earnedXP, perfect: isPerfect }
-        }));
-
         setTimeout(() => {
           state.levelIdx++;
+          let isNewStage = false;
           if (state.levelIdx >= stages[state.stageIdx].levels.length) {
             state.levelIdx = 0;
             state.stageIdx++;
+            isNewStage = true;
           }
-          this.loadLevel();
+          this.loadLevel(isNewStage);
         }, 1500);
       } else {
         UI.render();
@@ -352,7 +441,7 @@ const EquaBalance = (function() {
   };
 
   return {
-    iniciar: (onEnd) => Controller.start(onEnd),
+    iniciar: (options, onEnd) => Controller.start(options, onEnd),
     detener: () => Controller.stop()
   };
 })();

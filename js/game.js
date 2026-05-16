@@ -406,7 +406,7 @@ async function cargarJuego(tipoJuego) {
 }
 
 // ── Cargar EquaBalance (Módulo Matemático) ──
-window.cargarEquaBalance = function() {
+window.cargarEquaBalance = function(isEval = false) {
   if (!cursoSeleccionado) return;
   
   const juegoContainer = document.getElementById('juego-container');
@@ -419,16 +419,19 @@ window.cargarEquaBalance = function() {
   juegoContainer.classList.remove('oculto');
   history.pushState({ view: 'juego' }, '');
   
-  titulo.textContent = '⚖️ EquaBalance';
-  desc.textContent = 'Aisla la incógnita manteniendo la balanza en equilibrio.';
+  titulo.textContent = isEval ? '📋 Evaluación: Ecuaciones' : '⚖️ EquaBalance';
+  desc.textContent = isEval ? 'Resuelve de forma óptima sin ayudas.' : 'Aisla la incógnita manteniendo la balanza en equilibrio.';
   
   contenido.innerHTML = '';
   
   if (window.EquaBalanceApp) {
-    window.EquaBalanceApp.iniciar((resultados) => {
-       // Callback cuando termina todo el juego
+    window.EquaBalanceApp.iniciar({ evaluationMode: isEval }, (resultados) => {
        volverMenu();
-       mostrarMensaje('¡Módulo completado con éxito!', 'exito');
+       mostrarMensaje(isEval ? 'Evaluación completada' : '¡Módulo completado con éxito!', 'exito');
+       if (isEval && resultados && resultados.history) {
+           console.log("Resultados de la evaluación:", resultados.history);
+           // Aquí MatePlay podría exportar esto a Firestore o CSV
+       }
     });
   } else {
     mostrarMensaje('Error al cargar EquaBalance.', 'error');
