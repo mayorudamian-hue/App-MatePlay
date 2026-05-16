@@ -336,8 +336,8 @@ const EquaBalance = (function() {
             </div>
           </div>
           
-          <div id="eb-commlink" style="background: rgba(0,0,0,0.4); border-left: 3px solid var(--eb-primary); margin-bottom: 15px; padding: 10px 15px; border-radius: 4px; font-family: monospace; color: var(--eb-text-bright); height: 40px; display: flex; align-items: center; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);">
-             <span style="color:var(--eb-primary); margin-right: 10px; font-weight:bold;">></span> <span id="eb-commlink-text" style="white-space: nowrap;">Conectando...</span>
+          <div id="eb-commlink" style="background: rgba(0,0,0,0.4); border-left: 3px solid var(--eb-primary); margin-bottom: 15px; padding: 10px 15px; border-radius: 4px; font-family: monospace; color: var(--eb-text-bright); min-height: 44px; display: flex; align-items: flex-start; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); line-height: 1.4;">
+             <span style="color:var(--eb-primary); margin-right: 10px; font-weight:bold; margin-top: 2px;">></span> <span id="eb-commlink-text" style="word-wrap: break-word; flex: 1;">Conectando...</span>
           </div>
           
           <div id="eb-board" class="eb-balance-board">
