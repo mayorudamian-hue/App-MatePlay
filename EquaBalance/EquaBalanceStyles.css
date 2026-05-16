@@ -234,30 +234,38 @@
   background: #414868;
 }
 
-/* Animación de Cancelación */
-.eb-cancel-animation {
+/* Animación de Cancelación - Game Feel */
+.eb-particle {
   position: absolute;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-  z-index: 20;
-}
-
-.particle {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background: white;
+  width: 8px;
+  height: 8px;
+  background: var(--eb-success);
   border-radius: 50%;
-  animation: eb-pop 0.6s ease-out forwards;
+  pointer-events: none;
+  animation: eb-particle-anim 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  z-index: 50;
+  box-shadow: 0 0 10px var(--eb-success);
 }
 
-.p1 { animation-name: pop1; }
-.p2 { animation-name: pop2; }
-.p3 { animation-name: pop3; }
-.p4 { animation-name: pop4; }
+@keyframes eb-particle-anim {
+  0% { transform: translate(0, 0) scale(1.5); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+}
 
-@keyframes pop1 { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(-30px, -30px) scale(0); opacity: 0; } }
-@keyframes pop2 { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(30px, -30px) scale(0); opacity: 0; } }
-@keyframes pop3 { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(-30px, 30px) scale(0); opacity: 0; } }
-@keyframes pop4 { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(30px, 30px) scale(0); opacity: 0; } }
+.eb-board-side {
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.eb-board-side.drag-over {
+  background: rgba(122, 162, 247, 0.1);
+  box-shadow: inset 0 0 20px rgba(122, 162, 247, 0.2);
+  border-radius: 12px;
+}
+
+.eb-term-block.dragging {
+  opacity: 0.8;
+  transform: scale(1.15) rotate(5deg) !important;
+  box-shadow: 0 15px 25px rgba(0,0,0,0.5) !important;
+  z-index: 100;
+  pointer-events: none; /* Evita parpadeos al arrastrar sobre sí mismo */
+}

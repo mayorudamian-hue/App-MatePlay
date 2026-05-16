@@ -2,33 +2,42 @@
 // Implementación en Vanilla JS del Módulo EquaBalance para MatePlay - Fase 2
 
 const EquaBalance = (function() {
+  // --- MAPA DE SÍMBOLOS ---
+  const SYMBOL_MAP = {
+    'c': '📦', // Cofre
+    'a': '👾', // Alien
+    'm': '🍎', // Manzana
+    's': '⭐', // Estrella
+    'x': 'x'   // Letra formal
+  };
+
   // --- DATOS DE NIVELES ---
   const stages = [
     {
-      id: 1, name: "El Cofre Misterioso", mechanics: "El objetivo es dejar la incógnita (x) sola de un lado. Usa la balanza para sumar o restar lo mismo a ambos lados.",
+      id: 1, name: "1° Año: El Objeto Misterioso", mechanics: "Descubre qué valor esconde el objeto. Usa la balanza para dejarlo completamente solo.",
       levels: [
-        { id: '1-1', equation: 'x + 1 = 3', optimalMoves: 2 },
-        { id: '1-2', equation: 'x + 2 = 5', optimalMoves: 2 },
-        { id: '1-3', equation: 'x - 1 = 4', optimalMoves: 2 },
-        { id: '1-4', equation: 'x - 3 = 1', optimalMoves: 2 }
+        { id: '1-1', equation: 'c + 1 = 3', optimalMoves: 2, varSymbol: 'c' },
+        { id: '1-2', equation: 'c + 2 = 5', optimalMoves: 2, varSymbol: 'c' },
+        { id: '1-3', equation: 'a - 1 = 4', optimalMoves: 2, varSymbol: 'a' },
+        { id: '1-4', equation: 'a - 3 = 1', optimalMoves: 2, varSymbol: 'a' }
       ]
     },
     {
-      id: 2, name: "Positivos y Negativos", mechanics: "Cuidado, algunos bloques tienen energía inversa. Combínalos para cancelarlos visualmente.",
+      id: 2, name: "2° Año: Transición Simbólica", mechanics: "Los matemáticos a veces usan objetos, pero a menudo usan letras, como la famosa X.",
       levels: [
-        { id: '2-1', equation: 'x - 5 = -2', optimalMoves: 2 },
-        { id: '2-2', equation: 'x + 4 = -1', optimalMoves: 2 },
-        { id: '2-3', equation: 'x - 3 = -5', optimalMoves: 2 },
-        { id: '2-4', equation: 'x + 6 = -3', optimalMoves: 2 }
+        { id: '2-1', equation: 'm - 5 = -2', optimalMoves: 2, varSymbol: 'm' },
+        { id: '2-2', equation: 'x + 4 = -1', optimalMoves: 2, varSymbol: 'x' },
+        { id: '2-3', equation: 's - 3 = -5', optimalMoves: 2, varSymbol: 's' },
+        { id: '2-4', equation: 'x + 6 = -3', optimalMoves: 2, varSymbol: 'x' }
       ]
     },
     {
-      id: 3, name: "El Mundo de X", mechanics: "Ahora la incógnita puede estar multiplicada o de ambos lados. Agrupa las incógnitas antes de dividir.",
+      id: 3, name: "3° Año: El Mundo de X", mechanics: "Notación algebraica formal. Aprende a agrupar variables y usar la división para resolver.",
       levels: [
-        { id: '3-1', equation: '2x = x + 3', optimalMoves: 2 },
-        { id: '3-2', equation: '3x - 1 = 2x + 4', optimalMoves: 4 },
-        { id: '3-3', equation: '2x + 2 = 8', optimalMoves: 3 },
-        { id: '3-4', equation: '4x - 2 = 3x + 3', optimalMoves: 4 }
+        { id: '3-1', equation: '2x = x + 3', optimalMoves: 2, varSymbol: 'x' },
+        { id: '3-2', equation: '3x - 1 = 2x + 4', optimalMoves: 4, varSymbol: 'x' },
+        { id: '3-3', equation: '2x + 2 = 8', optimalMoves: 3, varSymbol: 'x' },
+        { id: '3-4', equation: '4x - 2 = 3x + 3', optimalMoves: 4, varSymbol: 'x' }
       ]
     }
   ];
@@ -55,10 +64,10 @@ const EquaBalance = (function() {
       };
       return { left: parseSide(leftStr), right: parseSide(rightStr) };
     },
-    applyActionToBothSides(leftSide, rightSide, type, value) {
+    applyActionToBothSides(leftSide, rightSide, type, value, symbol = 'x') {
       return {
-        newLeft: [...leftSide, this.createTerm(type, value)],
-        newRight: [...rightSide, this.createTerm(type, value)]
+        newLeft: [...leftSide, this.createTerm(type, value, symbol)],
+        newRight: [...rightSide, this.createTerm(type, value, symbol)]
       };
     },
     applyDivisionToBothSides(leftSide, rightSide, divisor) {
@@ -88,6 +97,56 @@ const EquaBalance = (function() {
       const isIsolatedVar = side => side.length === 1 && side[0].type === 'variable' && side[0].value === 1;
       const isSingleNum = side => side.length === 1 && side[0].type === 'number';
       return (isIsolatedVar(leftSide) && isSingleNum(rightSide)) || (isSingleNum(leftSide) && isIsolatedVar(rightSide));
+    }
+  };
+
+  // --- AUDIO ENGINE (Web Audio API) ---
+  const AudioEngine = {
+    ctx: null,
+    init() {
+      if (!this.ctx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if(AudioContext) this.ctx = new AudioContext();
+      }
+      if(this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+    },
+    playTone(freq, type, duration, vol=0.1) {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + duration);
+    },
+    play(sound) {
+      this.init();
+      if(!this.ctx) return;
+      switch(sound) {
+        case 'tap_block': 
+          this.playTone(440, 'sine', 0.1, 0.1); 
+          break;
+        case 'cancel_terms': 
+          this.playTone(800, 'square', 0.1, 0.05); 
+          setTimeout(() => this.playTone(1200, 'sine', 0.15, 0.05), 50);
+          break;
+        case 'invalid_move':
+          this.playTone(150, 'sawtooth', 0.2, 0.15);
+          break;
+        case 'level_complete':
+          this.playTone(523.25, 'sine', 0.15, 0.1);
+          setTimeout(() => this.playTone(659.25, 'sine', 0.15, 0.1), 150);
+          setTimeout(() => this.playTone(783.99, 'sine', 0.3, 0.1), 300);
+          break;
+        case 'combo_activate':
+          this.playTone(880, 'sine', 0.1, 0.1);
+          setTimeout(() => this.playTone(1760, 'sine', 0.3, 0.1), 100);
+          break;
+      }
     }
   };
 
@@ -184,6 +243,9 @@ const EquaBalance = (function() {
 
       const formatTime = (s) => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
       
+      const currentSymbol = level.varSymbol || 'x';
+      const displaySym = SYMBOL_MAP[currentSymbol] || currentSymbol;
+
       container.innerHTML = `
         <div class="eb-container">
           <div class="eb-hud">
@@ -223,8 +285,8 @@ const EquaBalance = (function() {
             <button class="eb-btn-action" data-action="add" data-type="number" data-value="1">+1 Ambos Lados</button>
             <button class="eb-btn-action" data-action="add" data-type="number" data-value="-1">-1 Ambos Lados</button>
             ${stage.id >= 3 ? `
-              <button class="eb-btn-action" data-action="add" data-type="variable" data-value="1">+x Ambos</button>
-              <button class="eb-btn-action" data-action="add" data-type="variable" data-value="-1">-x Ambos</button>
+              <button class="eb-btn-action" data-action="add" data-type="variable" data-value="1" data-symbol="${currentSymbol}">+${displaySym} Ambos</button>
+              <button class="eb-btn-action" data-action="add" data-type="variable" data-value="-1" data-symbol="${currentSymbol}">-${displaySym} Ambos</button>
               <button class="eb-btn-action divide" data-action="div" data-value="2">÷2 Ambos</button>
               <button class="eb-btn-action divide" data-action="div" data-value="3">÷3 Ambos</button>
             ` : ''}
@@ -241,9 +303,13 @@ const EquaBalance = (function() {
         let valDisp = term.value;
         if (!Number.isInteger(valDisp)) valDisp = Number(valDisp.toFixed(2));
         
+        const mappedSymbol = isVar ? (SYMBOL_MAP[term.symbol] || term.symbol) : '';
+        
+        // Si el valor absoluto es 1, solo mostramos el símbolo (o su negativo)
         const disp = isVar 
-          ? (Math.abs(valDisp) === 1 ? (valDisp < 0 ? `-${term.symbol}` : term.symbol) : `${valDisp}${term.symbol}`)
+          ? (Math.abs(valDisp) === 1 ? (valDisp < 0 ? `-${mappedSymbol}` : mappedSymbol) : `${valDisp}${mappedSymbol}`)
           : valDisp;
+          
         const cls = `eb-term-block ${isVar ? 'eb-term-var' : 'eb-term-num'} ${term.value < 0 ? 'eb-term-negative' : 'eb-term-positive'}`;
         return `<div class="${cls}" draggable="true" data-id="${term.id}"><div class="eb-term-content">${disp}</div></div>`;
       }).join('');
@@ -254,8 +320,13 @@ const EquaBalance = (function() {
       document.querySelectorAll('.eb-btn-action').forEach(btn => {
         btn.onclick = (e) => {
           const action = e.currentTarget.dataset.action;
-          if (action === 'add') Controller.actionBothSides(e.currentTarget.dataset.type, parseInt(e.currentTarget.dataset.value));
-          else if (action === 'div') Controller.divideBothSides(parseInt(e.currentTarget.dataset.value));
+          if (action === 'add') {
+             const symbol = e.currentTarget.dataset.symbol || 'x';
+             Controller.actionBothSides(e.currentTarget.dataset.type, parseInt(e.currentTarget.dataset.value), symbol);
+          }
+          else if (action === 'div') {
+             Controller.divideBothSides(parseInt(e.currentTarget.dataset.value));
+          }
         };
       });
 
@@ -264,23 +335,72 @@ const EquaBalance = (function() {
         b.ondragstart = (e) => {
           state.draggedId = e.target.closest('.eb-term-block').dataset.id;
           e.dataTransfer.effectAllowed = 'move';
+          setTimeout(() => b.classList.add('dragging'), 0); // Estilo mientras se arrastra
+        };
+        b.ondragend = (e) => {
+          b.classList.remove('dragging');
+          document.querySelectorAll('.eb-board-side').forEach(side => side.classList.remove('drag-over'));
         };
       });
 
-      const handleDragOver = (e) => e.preventDefault();
+      const handleDragOver = (e) => {
+        e.preventDefault();
+        const side = e.target.closest('.eb-board-side');
+        if (side) side.classList.add('drag-over');
+      };
+      
+      const handleDragLeave = (e) => {
+        const side = e.target.closest('.eb-board-side');
+        if (side) side.classList.remove('drag-over');
+      };
+
       const handleDrop = (sideId) => (e) => {
         e.preventDefault();
+        const side = e.target.closest('.eb-board-side');
+        if (side) side.classList.remove('drag-over');
+        
         const targetBlock = e.target.closest('.eb-term-block');
         if (targetBlock && state.draggedId && state.draggedId !== targetBlock.dataset.id) {
-          Controller.combineTerms(sideId, state.draggedId, targetBlock.dataset.id);
+          Controller.combineTerms(sideId, state.draggedId, targetBlock.dataset.id, e.clientX, e.clientY);
         }
         state.draggedId = null;
       };
 
       const leftSide = document.getElementById('eb-left-side');
       const rightSide = document.getElementById('eb-right-side');
-      if (leftSide) { leftSide.ondragover = handleDragOver; leftSide.ondrop = handleDrop('left'); }
-      if (rightSide) { rightSide.ondragover = handleDragOver; rightSide.ondrop = handleDrop('right'); }
+      if (leftSide) { 
+        leftSide.ondragover = handleDragOver; 
+        leftSide.ondragleave = handleDragLeave;
+        leftSide.ondrop = handleDrop('left'); 
+      }
+      if (rightSide) { 
+        rightSide.ondragover = handleDragOver; 
+        rightSide.ondragleave = handleDragLeave;
+        rightSide.ondrop = handleDrop('right'); 
+      }
+    },
+    
+    createParticles(x, y) {
+      const container = document.getElementById('eb-board');
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const relX = x - rect.left;
+      const relY = y - rect.top;
+      
+      for(let i=0; i<10; i++) {
+        const p = document.createElement('div');
+        p.className = 'eb-particle';
+        p.style.left = relX + 'px';
+        p.style.top = relY + 'px';
+        
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 40 + Math.random() * 60;
+        p.style.setProperty('--tx', (Math.cos(angle) * speed) + 'px');
+        p.style.setProperty('--ty', (Math.sin(angle) * speed) + 'px');
+        
+        container.appendChild(p);
+        setTimeout(() => p.remove(), 600);
+      }
     },
     
     showCelebration(earnedXP) {
@@ -311,6 +431,7 @@ const EquaBalance = (function() {
   // --- CONTROLADOR ---
   const Controller = {
     start(options, onEnd) {
+      AudioEngine.init(); // Permiso de audio del usuario
       state.stageIdx = 0;
       state.levelIdx = 0;
       state.time = 0;
@@ -356,9 +477,9 @@ const EquaBalance = (function() {
       }
     },
     
-    actionBothSides(type, value) {
-      if(window.reproducirSonido) window.reproducirSonido('ding');
-      const { newLeft, newRight } = Engine.applyActionToBothSides(state.leftSide, state.rightSide, type, value);
+    actionBothSides(type, value, symbol) {
+      AudioEngine.play('tap_block');
+      const { newLeft, newRight } = Engine.applyActionToBothSides(state.leftSide, state.rightSide, type, value, symbol);
       state.leftSide = newLeft;
       state.rightSide = newRight;
       state.moves++;
@@ -366,7 +487,7 @@ const EquaBalance = (function() {
     },
     
     divideBothSides(divisor) {
-      if(window.reproducirSonido) window.reproducirSonido('ding');
+      AudioEngine.play('tap_block');
       const { success, newLeft, newRight } = Engine.applyDivisionToBothSides(state.leftSide, state.rightSide, divisor);
       if (success) {
         state.leftSide = newLeft;
@@ -376,26 +497,28 @@ const EquaBalance = (function() {
       }
     },
     
-    combineTerms(sideId, id1, id2) {
+    combineTerms(sideId, id1, id2, clientX, clientY) {
       if (id1 === id2) return;
       const sideArr = sideId === 'left' ? state.leftSide : state.rightSide;
       const { success, newSide } = Engine.tryCombineTerms(sideArr, id1, id2);
       
       if (success) {
-        if(window.reproducirSonido) window.reproducirSonido('drop'); 
+        AudioEngine.play('cancel_terms');
+        if (clientX && clientY) UI.createParticles(clientX, clientY);
+        
         if (sideId === 'left') state.leftSide = newSide;
         else state.rightSide = newSide;
         state.moves++;
         this.checkWin();
       } else {
-        if(window.reproducirSonido) window.reproducirSonido('error');
+        AudioEngine.play('invalid_move');
         UI.vibrateBoard();
       }
     },
     
     checkWin() {
       if (Engine.checkSolved(state.leftSide, state.rightSide)) {
-        if(window.reproducirSonido) window.reproducirSonido('exito');
+        AudioEngine.play('level_complete');
         UI.render(); // Asegurar que el último movimiento se dibuje
         
         const level = stages[state.stageIdx].levels[state.levelIdx];
