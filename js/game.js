@@ -405,6 +405,56 @@ async function cargarJuego(tipoJuego) {
   }
 }
 
+// ── Cargar EquaBalance (Módulo Matemático) ──
+window.cargarEquaBalance = function() {
+  if (!cursoSeleccionado) return;
+  
+  const juegoContainer = document.getElementById('juego-container');
+  const menu = document.getElementById('menu');
+  const titulo = document.getElementById('titulo-juego');
+  const desc = document.getElementById('desc-juego');
+  const contenido = document.getElementById('contenido-juego');
+
+  menu.classList.add('oculto');
+  juegoContainer.classList.remove('oculto');
+  history.pushState({ view: 'juego' }, '');
+  
+  titulo.textContent = '⚖️ EquaBalance';
+  desc.textContent = 'Aisla la incógnita manteniendo la balanza en equilibrio.';
+  
+  contenido.innerHTML = '';
+  
+  if (window.EquaBalanceApp) {
+    window.EquaBalanceApp.iniciar((resultados) => {
+       // Callback cuando termina todo el juego
+       volverMenu();
+       mostrarMensaje('¡Módulo completado con éxito!', 'exito');
+    });
+  } else {
+    mostrarMensaje('Error al cargar EquaBalance.', 'error');
+  }
+};
+
+// Escuchar evento de recompensa de XP desde EquaBalance
+window.addEventListener('EQUABALANCE_SOLVED', (e) => {
+  const { xpEarned, perfect } = e.detail;
+  
+  // Usar las funciones nativas de MatePlay para guardar XP (esto asume la estructura del juego)
+  const key = `xp_${nombreAlumno}_${cursoSeleccionado}`;
+  let xpData = JSON.parse(localStorage.getItem(key)) || { total: 0, porJuego: {}, notasPerfectas: 0 };
+  
+  xpData.total += xpEarned;
+  xpData.porJuego['equabalance'] = (xpData.porJuego['equabalance'] || 0) + xpEarned;
+  if (perfect) xpData.notasPerfectas += 1;
+  
+  localStorage.setItem(key, JSON.stringify(xpData));
+  
+  // Procesar misiones (con tipo falso 'equabalance' para contar partidas)
+  if (window.procesarMisionesTerminadas) {
+    procesarMisionesTerminadas('equabalance', perfect ? 10 : 8, xpEarned, perfect ? 0 : 1);
+  }
+});
+
 window.exportarCSV = function() {
   let csv = 'Alumno;Curso;XP Total;Partidas Jugadas;Notas Perfectas;Sin Errores\n';
   let hayDatos = false;
