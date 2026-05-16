@@ -16,28 +16,28 @@ const EquaBalance = (function() {
     {
       id: 1, name: "1° Año: El Objeto Misterioso", mechanics: "Descubre qué valor esconde el objeto. Usa la balanza para dejarlo completamente solo.",
       levels: [
-        { id: '1-1', equation: 'c + 1 = 3', optimalMoves: 2, varSymbol: 'c' },
-        { id: '1-2', equation: 'c + 2 = 5', optimalMoves: 2, varSymbol: 'c' },
-        { id: '1-3', equation: 'a - 1 = 4', optimalMoves: 2, varSymbol: 'a' },
-        { id: '1-4', equation: 'a - 3 = 1', optimalMoves: 2, varSymbol: 'a' }
+        { id: '1-1', equation: 'c + 1 = 3', optimalMoves: 1, varSymbol: 'c' },
+        { id: '1-2', equation: 'c + 2 = 5', optimalMoves: 1, varSymbol: 'c' },
+        { id: '1-3', equation: 'a - 1 = 4', optimalMoves: 1, varSymbol: 'a' },
+        { id: '1-4', equation: 'a - 3 = 1', optimalMoves: 1, varSymbol: 'a' }
       ]
     },
     {
       id: 2, name: "2° Año: Transición Simbólica", mechanics: "Los matemáticos a veces usan objetos, pero a menudo usan letras, como la famosa X.",
       levels: [
-        { id: '2-1', equation: 'm - 5 = -2', optimalMoves: 2, varSymbol: 'm' },
-        { id: '2-2', equation: 'x + 4 = -1', optimalMoves: 2, varSymbol: 'x' },
-        { id: '2-3', equation: 's - 3 = -5', optimalMoves: 2, varSymbol: 's' },
-        { id: '2-4', equation: 'x + 6 = -3', optimalMoves: 2, varSymbol: 'x' }
+        { id: '2-1', equation: 'm - 5 = -2', optimalMoves: 1, varSymbol: 'm' },
+        { id: '2-2', equation: 'x + 4 = -1', optimalMoves: 1, varSymbol: 'x' },
+        { id: '2-3', equation: 's - 3 = -5', optimalMoves: 1, varSymbol: 's' },
+        { id: '2-4', equation: 'x + 6 = -3', optimalMoves: 1, varSymbol: 'x' }
       ]
     },
     {
       id: 3, name: "3° Año: El Mundo de X", mechanics: "Notación algebraica formal. Aprende a agrupar variables y usar la división para resolver.",
       levels: [
-        { id: '3-1', equation: '2x = x + 3', optimalMoves: 2, varSymbol: 'x' },
-        { id: '3-2', equation: '3x - 1 = 2x + 4', optimalMoves: 4, varSymbol: 'x' },
-        { id: '3-3', equation: '2x + 2 = 8', optimalMoves: 3, varSymbol: 'x' },
-        { id: '3-4', equation: '4x - 2 = 3x + 3', optimalMoves: 4, varSymbol: 'x' }
+        { id: '3-1', equation: '2x = x + 3', optimalMoves: 1, varSymbol: 'x' },
+        { id: '3-2', equation: '3x - 1 = 2x + 4', optimalMoves: 2, varSymbol: 'x' },
+        { id: '3-3', equation: '2x + 2 = 8', optimalMoves: 2, varSymbol: 'x' },
+        { id: '3-4', equation: '4x - 2 = 3x + 3', optimalMoves: 2, varSymbol: 'x' }
       ]
     }
   ];
@@ -252,7 +252,7 @@ const EquaBalance = (function() {
             <div class="eb-hud-left">
               <h2 class="eb-stage-title">${stage.name} <span class="eb-level-id">(${level.id})</span></h2>
               ${!state.evaluationMode 
-                ? `<div class="eb-moves">Movimientos: ${state.moves} <span class="eb-optimal">/ Óptimos: ${level.optimalMoves}</span></div>` 
+                ? `<div class="eb-moves">Pasos Algebraicos: ${state.moves} <span class="eb-optimal">/ Óptimos: ${level.optimalMoves}</span></div>` 
                 : `<div class="eb-moves" style="color:var(--eb-warning);">MODO EVALUACIÓN</div>`}
             </div>
             <div class="eb-hud-right">
@@ -407,12 +407,26 @@ const EquaBalance = (function() {
       const cel = document.getElementById('eb-celebration');
       const titleEl = document.getElementById('eb-cel-title');
       const xpEl = document.getElementById('eb-earned-xp');
+      
       if (cel && xpEl && titleEl) {
+        let resultString = "";
+        if (state.leftSide.length > 0 && state.rightSide.length > 0) {
+           const finalVar = state.leftSide[0].type === 'variable' ? state.leftSide[0] : state.rightSide[0];
+           const finalNum = state.leftSide[0].type === 'number' ? state.leftSide[0] : state.rightSide[0];
+           if (finalVar && finalNum) {
+             const mappedSymbol = SYMBOL_MAP[finalVar.symbol] || finalVar.symbol;
+             // Formateo del decimal
+             let valDisp = finalNum.value;
+             if (!Number.isInteger(valDisp)) valDisp = Number(valDisp.toFixed(2));
+             resultString = `${mappedSymbol} = ${valDisp}`;
+           }
+        }
+      
         if (!state.evaluationMode) {
-          titleEl.textContent = '¡Correcto! ✨';
+          titleEl.innerHTML = `¡Correcto! ✨${resultString ? `<br><span style="font-size:2.5rem; display:block; margin-top:10px; color:#c0caf5; font-weight:900;">${resultString}</span>` : ''}`;
           xpEl.textContent = `+${earnedXP} XP`;
         } else {
-          titleEl.textContent = '¡Registrado! 📝';
+          titleEl.innerHTML = `¡Registrado! 📝${resultString ? `<br><span style="font-size:2.5rem; display:block; margin-top:10px; color:#c0caf5; font-weight:900;">${resultString}</span>` : ''}`;
           xpEl.textContent = '';
         }
         cel.classList.remove('oculto');
@@ -508,7 +522,7 @@ const EquaBalance = (function() {
         
         if (sideId === 'left') state.leftSide = newSide;
         else state.rightSide = newSide;
-        state.moves++;
+        // NOTA: No sumamos moves aquí para que simplificar sea gratis
         this.checkWin();
       } else {
         AudioEngine.play('invalid_move');
