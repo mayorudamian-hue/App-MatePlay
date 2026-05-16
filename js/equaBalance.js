@@ -164,7 +164,12 @@ const EquaBalance = (function() {
           <div class="eb-action-panel">
             <button class="eb-btn-action" data-action="add" data-type="number" data-value="1">+1 Ambos Lados</button>
             <button class="eb-btn-action" data-action="add" data-type="number" data-value="-1">-1 Ambos Lados</button>
-            ${stage.id >= 3 ? `<button class="eb-btn-action divide" data-action="div" data-value="2">÷2 Ambos Lados</button>` : ''}
+            ${stage.id >= 3 ? `
+              <button class="eb-btn-action" data-action="add" data-type="variable" data-value="1">+x Ambos</button>
+              <button class="eb-btn-action" data-action="add" data-type="variable" data-value="-1">-x Ambos</button>
+              <button class="eb-btn-action divide" data-action="div" data-value="2">÷2 Ambos</button>
+              <button class="eb-btn-action divide" data-action="div" data-value="3">÷3 Ambos</button>
+            ` : ''}
           </div>
         </div>
       `;
@@ -175,9 +180,12 @@ const EquaBalance = (function() {
     renderTerms(side) {
       return side.map(term => {
         const isVar = term.type === 'variable';
+        let valDisp = term.value;
+        if (!Number.isInteger(valDisp)) valDisp = Number(valDisp.toFixed(2));
+        
         const disp = isVar 
-          ? (Math.abs(term.value) === 1 ? (term.value < 0 ? `-${term.symbol}` : term.symbol) : `${term.value}${term.symbol}`)
-          : term.value;
+          ? (Math.abs(valDisp) === 1 ? (valDisp < 0 ? `-${term.symbol}` : term.symbol) : `${valDisp}${term.symbol}`)
+          : valDisp;
         const cls = `eb-term-block ${isVar ? 'eb-term-var' : 'eb-term-num'} ${term.value < 0 ? 'eb-term-negative' : 'eb-term-positive'}`;
         return `<div class="${cls}" draggable="true" data-id="${term.id}"><div class="eb-term-content">${disp}</div></div>`;
       }).join('');
@@ -187,9 +195,9 @@ const EquaBalance = (function() {
       // Botones del panel
       document.querySelectorAll('.eb-btn-action').forEach(btn => {
         btn.onclick = (e) => {
-          const action = e.target.dataset.action;
-          if (action === 'add') Controller.actionBothSides(e.target.dataset.type, parseInt(e.target.dataset.value));
-          else if (action === 'div') Controller.divideBothSides(parseInt(e.target.dataset.value));
+          const action = e.currentTarget.dataset.action;
+          if (action === 'add') Controller.actionBothSides(e.currentTarget.dataset.type, parseInt(e.currentTarget.dataset.value));
+          else if (action === 'div') Controller.divideBothSides(parseInt(e.currentTarget.dataset.value));
         };
       });
 
