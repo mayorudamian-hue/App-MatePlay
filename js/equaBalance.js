@@ -189,6 +189,42 @@ const EquaBalance = (function() {
     currentStageLevels: []
   };
 
+  // --- NARRADOR Y COMUNICACIONES ---
+  const Narrator = {
+    getMessage(stageIdx, event, symbol = 'x') {
+      const dynamicLoad = {
+        'c': ["Ren: Hay demasiadas cajas bloqueando el área. Voy a despejar la zona.", "Cero: La masa de las cajas es inestable. Aísla una para medirla."],
+        'a': ["Cero: ¡Atención! Esa criatura se ha escapado. Aíslala de inmediato.", "Ren: Voy a encerrar a ese bicho antes de que cause daños físicos."],
+        'm': ["Sistema: Núcleo biológico inestable. Neutraliza el exceso de masa alrededor de la manzana."],
+        's': ["Cero: ¡Cuidado! Un núcleo de poder (⭐) se salió de control. Aísla la estrella."],
+        'x': ["Cero: Filtrando firmas fantasma [X]... Aísla la anomalía de la red.", "Cero: El código fuente está fragmentado. Consolida las variables [X]."]
+      };
+      
+      const dynamicWin = {
+        'c': ["Ren: Zona despejada. Hemos recuperado el contenedor.", "Cero: Bien hecho. La caja está aislada."],
+        'a': ["Ren: Listo. La criatura está contenida de forma segura.", "Cero: Monstruo encerrado. El sector está a salvo."],
+        'm': ["Cero: Núcleo biológico estabilizado. Buen control de la anomalía."],
+        's': ["Ren: Estrella contenida. El poder vuelve a fluir con normalidad."],
+        'x': ["Ren: Algoritmo purgado. La variable [X] ha sido resuelta.", "Sistema: Velo cuántico estabilizado al 100%."]
+      };
+      
+      const dynamicFail = {
+        'c': ["Sistema: Choque físico. Las cajas numéricas no se anulan así.", "Cero: No puedes fusionar cajas con otros elementos. Usa opuestos."],
+        'a': ["Cero: Los números y la criatura no se mezclan. ¡Despéjala!"],
+        'm': ["Sistema: Polaridad biológica incompatible. Busca el opuesto numérico."],
+        's': ["Cero: La energía de la estrella rechazó tu movimiento. Ten cuidado."],
+        'x': ["Sistema: Error de sintaxis en el tejido. Variables no compatibles."]
+      };
+
+      let pool = ["Sistema en línea."];
+      if (event === 'load') pool = dynamicLoad[symbol] || dynamicLoad['x'];
+      if (event === 'win') pool = dynamicWin[symbol] || dynamicWin['x'];
+      if (event === 'fail') pool = dynamicFail[symbol] || dynamicFail['x'];
+      
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+  };
+
   // --- INTERFAZ (UI) ---
   const UI = {
     initStyles() {
@@ -300,6 +336,10 @@ const EquaBalance = (function() {
             </div>
           </div>
           
+          <div id="eb-commlink" style="background: rgba(0,0,0,0.4); border-left: 3px solid var(--eb-primary); margin-bottom: 15px; padding: 10px 15px; border-radius: 4px; font-family: monospace; color: var(--eb-text-bright); height: 40px; display: flex; align-items: center; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);">
+             <span style="color:var(--eb-primary); margin-right: 10px; font-weight:bold;">></span> <span id="eb-commlink-text" style="white-space: nowrap;">Conectando...</span>
+          </div>
+          
           <div id="eb-board" class="eb-balance-board">
             <div id="eb-left-side" class="eb-board-side eb-left-side" data-side="left">
               <div class="eb-terms-container">${this.renderTerms(state.leftSide)}</div>
@@ -318,14 +358,27 @@ const EquaBalance = (function() {
           </div>
           
           <div class="eb-action-panel">
-            <button class="eb-btn-action" data-action="add" data-type="number" data-value="1">+1 Ambos Lados</button>
-            <button class="eb-btn-action" data-action="add" data-type="number" data-value="-1">-1 Ambos Lados</button>
-            ${stage.id >= 3 ? `
-              <button class="eb-btn-action" data-action="add" data-type="variable" data-value="1" data-symbol="${currentSymbol}">+${displaySym} Ambos</button>
-              <button class="eb-btn-action" data-action="add" data-type="variable" data-value="-1" data-symbol="${currentSymbol}">-${displaySym} Ambos</button>
-              <button class="eb-btn-action divide" data-action="div" data-value="2">÷2 Ambos</button>
-              <button class="eb-btn-action divide" data-action="div" data-value="3">÷3 Ambos</button>
-            ` : ''}
+            ${stage.id === 1 ? `
+              <button class="eb-btn-action" data-action="add" data-type="number" data-value="1">+1 Ambos Lados</button>
+              <button class="eb-btn-action" data-action="add" data-type="number" data-value="-1">-1 Ambos Lados</button>
+            ` : stage.id === 2 ? `
+              <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%;">
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="1">+1 Ambos</button>
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="2">+2 Ambos</button>
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="3">+3 Ambos</button>
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="5">+5 Ambos</button>
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="-1">-1 Ambos</button>
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="-2">-2 Ambos</button>
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="-3">-3 Ambos</button>
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="-5">-5 Ambos</button>
+              </div>
+            ` : `
+              <div style="display:flex; gap:10px; width:100%; align-items:center; background: var(--eb-surface); padding: 10px; border-radius: 8px;">
+                <span style="color:var(--eb-primary); font-family:monospace; font-weight:bold;">> CMD:</span>
+                <input type="text" id="eb-custom-action-input" placeholder="Ej: 2, -3, x, -2x, /2" style="flex:1; padding: 12px; border-radius: 6px; border: 2px solid var(--eb-primary); background: var(--eb-bg); color: var(--eb-text-bright); font-family: monospace; font-size: 1.2rem; text-align:center; outline:none;">
+                <button class="eb-btn-action" id="eb-btn-custom-action" style="margin:0; background:var(--eb-primary); color:white; font-weight:bold; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(122,162,247,0.3);">Ejecutar</button>
+              </div>
+            `}
           </div>
         </div>
       `;
@@ -352,8 +405,8 @@ const EquaBalance = (function() {
     },
 
     attachEvents() {
-      // Botones del panel
-      document.querySelectorAll('.eb-btn-action').forEach(btn => {
+      // Botones de acción estándar (Etapas 1 y 2)
+      document.querySelectorAll('.eb-btn-action[data-action]').forEach(btn => {
         btn.onclick = (e) => {
           const action = e.currentTarget.dataset.action;
           if (action === 'add') {
@@ -365,6 +418,49 @@ const EquaBalance = (function() {
           }
         };
       });
+
+      // Lógica de comando manual (Etapa 3)
+      const customInput = document.getElementById('eb-custom-action-input');
+      const customBtn = document.getElementById('eb-btn-custom-action');
+      if (customInput && customBtn) {
+        const executeCmd = () => {
+           const val = customInput.value.trim().toLowerCase();
+           if (!val) return;
+           
+           if (val.startsWith('/') || val.startsWith(':')) {
+              const num = parseInt(val.substring(1));
+              if (!isNaN(num) && num !== 0) {
+                 Controller.divideBothSides(num);
+                 customInput.value = '';
+              } else {
+                 UI.showCommlinkMessage("Sistema: Divisor inválido.", true);
+              }
+           } else {
+              let type = 'number';
+              let numVal = 1;
+              let sym = 'x';
+              
+              if (val.includes('x')) {
+                 type = 'variable';
+                 const numStr = val.replace(/x/g, '').trim();
+                 if (numStr === '-') numVal = -1;
+                 else if (numStr === '' || numStr === '+') numVal = 1;
+                 else numVal = parseInt(numStr);
+              } else {
+                 numVal = parseInt(val);
+              }
+              
+              if (!isNaN(numVal)) {
+                 Controller.actionBothSides(type, numVal, sym);
+                 customInput.value = ''; 
+              } else {
+                 UI.showCommlinkMessage("Sistema: Comando no reconocido.", true);
+              }
+           }
+        };
+        customBtn.onclick = executeCmd;
+        customInput.onkeypress = (e) => { if(e.key === 'Enter') executeCmd(); };
+      }
 
       // Eventos Drag & Drop
       document.querySelectorAll('.eb-term-block').forEach(b => {
@@ -412,8 +508,36 @@ const EquaBalance = (function() {
       if (rightSide) { 
         rightSide.ondragover = handleDragOver; 
         rightSide.ondragleave = handleDragLeave;
-        rightSide.ondrop = handleDrop('right'); 
+        rightSide.ondrop = handleDrop('right');        
+      };
+
+      // Mostrar mensaje inicial si acabamos de renderizar el contenedor base
+      if (!this.typeInterval) {
+         const currentLevel = state.currentStageLevels[state.levelIdx];
+         this.showCommlinkMessage(Narrator.getMessage(state.stageIdx, 'load', currentLevel?.varSymbol));
       }
+    },
+    
+    showCommlinkMessage(text, isError = false) {
+      const comm = document.getElementById('eb-commlink-text');
+      const box = document.getElementById('eb-commlink');
+      if (!comm || !box) return;
+      
+      comm.textContent = '';
+      box.style.borderLeftColor = isError ? 'var(--eb-error)' : 'var(--eb-primary)';
+      comm.style.color = isError ? 'var(--eb-error)' : 'var(--eb-text-bright)';
+      
+      // Destello de caja
+      box.style.backgroundColor = isError ? 'rgba(247, 118, 142, 0.2)' : 'rgba(122, 162, 247, 0.1)';
+      setTimeout(() => box.style.backgroundColor = 'rgba(0,0,0,0.4)', 200);
+      
+      let i = 0;
+      clearInterval(this.typeInterval);
+      this.typeInterval = setInterval(() => {
+        comm.textContent += text.charAt(i);
+        i++;
+        if (i >= text.length) clearInterval(this.typeInterval);
+      }, 30); // 30ms por carácter (efecto máquina de escribir)
     },
     
     createParticles(x, y) {
@@ -529,10 +653,18 @@ const EquaBalance = (function() {
       state.rightSide = parsed.right;
       state.moves = 0;
       
+      // Reiniciar intervalo de tipeo al cambiar nivel
+      clearInterval(UI.typeInterval);
+      UI.typeInterval = null; 
+
       if (isNewStage && !state.evaluationMode) {
-        UI.renderStageIntro(() => { UI.render(); });
+        UI.renderStageIntro(() => { 
+            UI.render(); 
+            UI.showCommlinkMessage(Narrator.getMessage(state.stageIdx, 'load', level.varSymbol)); 
+        });
       } else {
         UI.render();
+        UI.showCommlinkMessage(Narrator.getMessage(state.stageIdx, 'load', level.varSymbol));
       }
     },
     
@@ -572,15 +704,18 @@ const EquaBalance = (function() {
       } else {
         AudioEngine.play('invalid_move');
         UI.vibrateBoard();
+        const currentLevel = state.currentStageLevels[state.levelIdx];
+        UI.showCommlinkMessage(Narrator.getMessage(state.stageIdx, 'fail', currentLevel?.varSymbol), true);
       }
     },
     
     checkWin() {
       if (Engine.checkSolved(state.leftSide, state.rightSide)) {
+        const level = state.currentStageLevels[state.levelIdx];
         AudioEngine.play('level_complete');
         UI.render(); // Asegurar que el último movimiento se dibuje
+        UI.showCommlinkMessage(Narrator.getMessage(state.stageIdx, 'win', level?.varSymbol));
         
-        const level = state.currentStageLevels[state.levelIdx];
         const isPerfect = state.moves <= level.optimalMoves;
         
         // Guardar historial para evaluación
