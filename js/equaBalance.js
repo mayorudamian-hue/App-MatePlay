@@ -163,8 +163,8 @@ const EquaBalance = (function() {
     },
     applyDivisionToBothSides(leftSide, rightSide, divisor) {
       const divideSide = side => side.map(t => {
-          if (t.type === 'bubble') return { ...t, multiplier: t.multiplier / divisor };
-          return { ...t, val: t.val / divisor };
+          if (t.type === 'bubble') return { ...t, multiplier: Math.round((t.multiplier / divisor)*1000)/1000 };
+          return { ...t, val: Math.round((t.val / divisor)*1000)/1000 };
       });
       return { success: true, newLeft: divideSide(leftSide), newRight: divideSide(rightSide) };
     },
@@ -172,13 +172,15 @@ const EquaBalance = (function() {
       const t1 = side.find(t => t.id === id1), t2 = side.find(t => t.id === id2);
       if (!t1 || !t2 || t1.type === 'bubble' || t2.type === 'bubble' || t1.type !== t2.type || (t1.type === 'variable' && t1.symbol !== t2.symbol)) return { success: false, newSide: side };
       let newSide = side.filter(t => t.id !== id1 && t.id !== id2);
-      if (t1.val + t2.val !== 0) newSide.push({ ...t1, val: t1.val + t2.val, id: Math.random().toString(36).substring(2,9) });
+      let sum = t1.val + t2.val;
+      sum = Math.round(sum * 1000) / 1000; // Fix floating point issues
+      if (sum !== 0) newSide.push({ ...t1, val: sum, id: Math.random().toString(36).substring(2,9) });
       return { success: true, newSide };
     },
     checkSolved(leftSide, rightSide) {
       const flatten = side => side.reduce((acc, t) => t.type === 'bubble' ? acc.concat(t.terms.map(it => ({...it, val: it.val * t.multiplier}))) : acc.concat(t), []);
       const l = flatten(leftSide), r = flatten(rightSide);
-      const isIsolatedVar = s => s.length === 1 && s[0].type === 'variable' && s[0].val === 1;
+      const isIsolatedVar = s => s.length === 1 && s[0].type === 'variable' && Math.abs(s[0].val - 1) < 0.001;
       const isSingleNum = s => s.length === 1 && s[0].type === 'number';
       return (isIsolatedVar(l) && isSingleNum(r)) || (isSingleNum(l) && isIsolatedVar(r));
     },
@@ -293,12 +295,20 @@ const EquaBalance = (function() {
         'x': ["Ren: Protocolo ejecutado. Paréntesis purgados del código."]
       };
 
+      const dynamicHints = {
+        'vars_both_sides': ["Cero: Demasiadas variables dispersas. Intenta moverlas todas a un solo muelle.", "Ren: La señal de la variable está duplicada. Hay que consolidarla en un lado."],
+        'nums_both_sides': ["Cero: Los valores constantes están estorbando. Agrúpalos para ver mejor.", "Ren: Demasiado ruido numérico. Voy a simplificar las constantes."],
+        'has_bubbles': ["Cero: Esa zona de cuarentena protege el núcleo. Tienes que colapsar el escudo primero.", "Aria: Mis escudos son impenetrables... a menos que sepas donde presionar."],
+        'general': ["Cero: Estás dando vueltas, Ren. Enfócate en aislar la incógnita.", "Ren: Esta ecuación es más resistente de lo que pensaba. Necesito un enfoque más directo."]
+      };
+
       let pool = ["Sistema en línea."];
       if (event === 'load') pool = dynamicLoad[symbol] || dynamicLoad['x'];
       if (event === 'load_two_vars') pool = dynamicLoadTwoVars[symbol] || dynamicLoadTwoVars['x'];
       if (event === 'win') pool = dynamicWin[symbol] || dynamicWin['x'];
       if (event === 'fail') pool = dynamicFail[symbol] || dynamicFail['x'];
       if (event === 'bubble_expanded') pool = dynamicBubbleExpanded[symbol] || dynamicBubbleExpanded['x'];
+      if (event === 'hint') pool = dynamicHints[symbol] || dynamicHints['general'];
       
       return pool[Math.floor(Math.random() * pool.length)];
     }
@@ -472,8 +482,14 @@ const EquaBalance = (function() {
             </div>
           </div>
           
-          <div id="eb-commlink" style="background: rgba(0,0,0,0.4); border-left: 3px solid var(--eb-primary); margin-bottom: 15px; padding: 12px 15px; border-radius: 4px; font-family: monospace; color: var(--eb-text-bright); min-height: 60px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); line-height: 1.5; font-size: 0.95rem;">
-             <span style="color:var(--eb-primary); margin-right: 5px; font-weight:bold;">></span><span id="eb-commlink-text" style="word-wrap: break-word;">Conectando...</span>
+          <div id="eb-commlink" style="display:flex; align-items:center; background: rgba(10, 12, 18, 0.9); border: 1px solid var(--eb-primary); margin-bottom: 15px; padding: 10px; border-radius: 8px; font-family: monospace; color: var(--eb-text-bright); min-height: 80px; box-shadow: 0 0 20px rgba(122,162,247,0.2); gap: 15px; position:relative; overflow:hidden;">
+             <div id="eb-commlink-avatar" style="width: 60px; height: 60px; border: 2px solid var(--eb-primary); border-radius: 6px; background: url('C:/Users/Usuario/.gemini/antigravity/brain/a9ce7f3f-bda1-4b48-97a0-f7cd8f12e249/cero_mentor_avatar_1778902282069.png') center/cover; position:relative; flex-shrink:0;">
+                <div style="position:absolute; bottom: -5px; right: -5px; width: 12px; height: 12px; background: #9ece6a; border-radius: 50%; border: 2px solid #1a1b26; box-shadow: 0 0 10px #9ece6a;"></div>
+             </div>
+             <div style="flex:1;">
+                <div style="font-size:0.7rem; color:var(--eb-primary); margin-bottom:4px; text-transform:uppercase; letter-spacing:1px; font-weight:bold;">Commlink: Canal Seguro</div>
+                <span style="color:var(--eb-primary); margin-right: 5px; font-weight:bold;">></span><span id="eb-commlink-text" style="word-wrap: break-word; line-height:1.4;">Conectando...</span>
+             </div>
           </div>
           
           <div id="eb-board" class="eb-balance-board">
@@ -547,7 +563,7 @@ const EquaBalance = (function() {
     },
 
     renderTerms(terms) {
-      if (terms.length === 0) return `<div class="eb-term-block" style="background:transparent;box-shadow:none;color:transparent;">0</div>`;
+      if (terms.length === 0) return `<div class="eb-term-zero">0</div>`;
       return terms.map(t => {
         if (t.type === 'bubble') {
            return `
@@ -586,8 +602,15 @@ const EquaBalance = (function() {
       });
 
       document.querySelectorAll('.eb-board-side').forEach(side => {
-        side.ondragover = (e) => e.preventDefault();
+        side.ondragover = (e) => {
+            e.preventDefault();
+            side.classList.add('eb-drag-over');
+        };
+        side.ondragleave = (e) => {
+            side.classList.remove('eb-drag-over');
+        };
         side.ondrop = (e) => {
+          side.classList.remove('eb-drag-over');
           const target = e.target.closest('.eb-term-block');
           if (target && state.draggedId) Controller.combineTerms(side.dataset.side, state.draggedId, target.dataset.id, e.clientX, e.clientY);
         };
@@ -598,8 +621,25 @@ const EquaBalance = (function() {
     
     showCommlinkMessage(text, isError = false) {
       const comm = document.getElementById('eb-commlink-text');
+      const avatar = document.getElementById('eb-commlink-avatar');
       if (!comm) return;
+      
       comm.textContent = text;
+      
+      // Trigger glitch animation on the whole panel
+      comm.parentElement.parentElement.classList.remove('eb-glitch-text');
+      void comm.parentElement.parentElement.offsetWidth; // Trigger reflow
+      comm.parentElement.parentElement.classList.add('eb-glitch-text');
+
+      // Animación de hablar para el avatar
+      if (avatar) {
+        avatar.style.borderColor = isError ? 'var(--eb-error)' : 'var(--eb-primary)';
+        avatar.animate([
+          { opacity: 0.7, transform: 'scale(1)' },
+          { opacity: 1, transform: 'scale(1.05)' },
+          { opacity: 0.7, transform: 'scale(1)' }
+        ], { duration: 200, iterations: 2 });
+      }
     },
     
     createParticles(x, y) {
@@ -686,8 +726,18 @@ const EquaBalance = (function() {
     start(options, onEnd) {
       AudioEngine.init();
       const curso = options?.curso || '3ro';
+      const modoAvanzado = options?.modoAvanzado || false;
+      state.modoAvanzado = modoAvanzado;
       state.stageIdx = curso === '1ro' ? 0 : (curso === '2do' ? 1 : 2);
-      state.currentStageLevels = [...stages[state.stageIdx].levels].sort(() => 0.5 - Math.random()).slice(0, 5);
+      
+      let allLevels = stages[state.stageIdx].levels;
+      if (modoAvanzado) {
+          allLevels = allLevels.slice(15);
+      } else {
+          allLevels = allLevels.slice(0, 15);
+      }
+      
+      state.currentStageLevels = [...allLevels].sort(() => 0.5 - Math.random()).slice(0, 5);
       state.levelIdx = 0;
       state.time = 0;
       state.xp = 0;
@@ -815,8 +865,13 @@ const EquaBalance = (function() {
     },
     
     checkWin() {
+      // Verificar si necesita una pista
+      const level = state.currentStageLevels[state.levelIdx];
+      if (state.moves > level.optimalMoves + 3 && state.moves % 3 === 0) {
+        this.provideHint();
+      }
+
       if (Engine.checkSolved(state.leftSide, state.rightSide)) {
-        const level = state.currentStageLevels[state.levelIdx];
         AudioEngine.play('level_complete');
         UI.render(); // Asegurar que el último movimiento se dibuje
         UI.showCommlinkMessage(Narrator.getMessage(state.stageIdx, 'win', level?.varSymbol));
@@ -833,7 +888,7 @@ const EquaBalance = (function() {
 
         let earnedXP = 0;
         if (!state.evaluationMode) {
-          const baseXP = 50;
+          const baseXP = state.modoAvanzado ? 100 : 50;
           earnedXP = isPerfect ? baseXP * 2 * state.combo : baseXP * state.combo;
           state.xp += earnedXP;
           if(isPerfect) state.combo++;
@@ -857,9 +912,20 @@ const EquaBalance = (function() {
           }
           this.loadLevel(isNewStage);
         }, 1500);
-      } else {
-        UI.render();
       }
+    },
+
+    provideHint() {
+      const hasBubbles = state.leftSide.some(t => t.type === 'bubble') || state.rightSide.some(t => t.type === 'bubble');
+      const hasVarsBothSides = state.leftSide.some(t => t.type === 'variable') && state.rightSide.some(t => t.type === 'variable');
+      const hasNumsBothSides = state.leftSide.some(t => t.type === 'number') && state.rightSide.some(t => t.type === 'number');
+
+      let hintType = 'general';
+      if (hasBubbles) hintType = 'has_bubbles';
+      else if (hasVarsBothSides) hintType = 'vars_both_sides';
+      else if (hasNumsBothSides) hintType = 'nums_both_sides';
+
+      UI.showCommlinkMessage(Narrator.getMessage(state.stageIdx, 'hint', hintType));
     }
   };
 

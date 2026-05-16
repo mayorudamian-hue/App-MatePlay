@@ -406,7 +406,7 @@ async function cargarJuego(tipoJuego) {
 }
 
 // ── Cargar EquaBalance (Módulo Matemático) ──
-window.cargarEquaBalance = function(isEval = false) {
+window.cargarEquaBalance = function(isEval = false, modoAvanzado = false) {
   if (!cursoSeleccionado) return;
   
   const juegoContainer = document.getElementById('juego-container');
@@ -419,13 +419,13 @@ window.cargarEquaBalance = function(isEval = false) {
   juegoContainer.classList.remove('oculto');
   history.pushState({ view: 'juego' }, '');
   
-  titulo.textContent = isEval ? '📋 Evaluación: Ecuaciones' : '⚖️ EquaBalance';
-  desc.textContent = isEval ? 'Resuelve de forma óptima sin ayudas.' : 'Aisla la incógnita manteniendo la balanza en equilibrio.';
+  titulo.textContent = isEval ? '📋 Evaluación: Ecuaciones' : (modoAvanzado ? '🌌 EquaBalance: La Fractura' : '⚖️ EquaBalance');
+  desc.textContent = isEval ? 'Resuelve de forma óptima sin ayudas.' : (modoAvanzado ? 'Enfréntate a las defensas fraccionarias de Aria.' : 'Aisla la incógnita manteniendo la balanza en equilibrio.');
   
   contenido.innerHTML = '';
   
   if (window.EquaBalanceApp) {
-    window.EquaBalanceApp.iniciar({ evaluationMode: isEval, curso: cursoSeleccionado }, (resultados) => {
+    window.EquaBalanceApp.iniciar({ evaluationMode: isEval, curso: cursoSeleccionado, modoAvanzado: modoAvanzado }, (resultados) => {
        volverMenu();
        mostrarMensaje(isEval ? 'Evaluación completada' : '¡Módulo completado con éxito!', 'exito');
        if (isEval && resultados && resultados.history) {
