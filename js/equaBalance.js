@@ -34,10 +34,10 @@ const EquaBalance = (function() {
         { id: '1-14', equation: '2m = m + 5', optimalMoves: 1, varSymbol: 'm' },
         { id: '1-15', equation: '2m + 2 = m + 4', optimalMoves: 2, varSymbol: 'm' },
         { id: '1-16', equation: 's - 2 = 3', optimalMoves: 1, varSymbol: 's' },
-        { id: '1-17', equation: '2s = s + 6', optimalMoves: 1, varSymbol: 's' },
-        { id: '1-18', equation: '3s = 2s + 5', optimalMoves: 1, varSymbol: 's' },
-        { id: '1-19', equation: 'c + 5 = 7', optimalMoves: 1, varSymbol: 'c' },
-        { id: '1-20', equation: '3a + 1 = 2a + 4', optimalMoves: 2, varSymbol: 'a' }
+        { id: '1-17', equation: '2(c + 1) = 4', optimalMoves: 2, varSymbol: 'c' },
+        { id: '1-18', equation: '2(a + 2) = a + 6', optimalMoves: 3, varSymbol: 'a' },
+        { id: '1-19', equation: '3(c + 1) = 2(c + 2)', optimalMoves: 3, varSymbol: 'c' },
+        { id: '1-20', equation: '-2(a - 1) = 4', optimalMoves: 2, varSymbol: 'a' }
       ]
     },
     {
@@ -60,11 +60,11 @@ const EquaBalance = (function() {
         { id: '2-13', equation: 's + 3 = -2', optimalMoves: 1, varSymbol: 's' },
         { id: '2-14', equation: 'm - 4 = -1', optimalMoves: 1, varSymbol: 'm' },
         { id: '2-15', equation: '2x + 3 = x - 2', optimalMoves: 2, varSymbol: 'x' },
-        { id: '2-16', equation: '2s - 1 = s - 5', optimalMoves: 2, varSymbol: 's' },
-        { id: '2-17', equation: '3x + 1 = 2x - 3', optimalMoves: 3, varSymbol: 'x' },
-        { id: '2-18', equation: '2m + 4 = m - 1', optimalMoves: 3, varSymbol: 'm' },
-        { id: '2-19', equation: '3s - 2 = 2s + 3', optimalMoves: 3, varSymbol: 's' },
-        { id: '2-20', equation: '2x - 3 = x - 7', optimalMoves: 2, varSymbol: 'x' }
+        { id: '2-16', equation: 's - 0.5 = 1.5', optimalMoves: 1, varSymbol: 's' },
+        { id: '2-17', equation: 'm + 0.5 = 2.5', optimalMoves: 1, varSymbol: 'm' },
+        { id: '2-18', equation: '2(s - 1) = 4', optimalMoves: 2, varSymbol: 's' },
+        { id: '2-19', equation: '-2(m + 1) = -m - 2.5', optimalMoves: 3, varSymbol: 'm' },
+        { id: '2-20', equation: '3(s + 0.5) = s + 4.5', optimalMoves: 3, varSymbol: 's' }
       ]
     },
     {
@@ -87,11 +87,11 @@ const EquaBalance = (function() {
         { id: '3-13', equation: '3x - 3 = 9', optimalMoves: 2, varSymbol: 'x' },
         { id: '3-14', equation: '5x + 2 = 3x + 10', optimalMoves: 3, varSymbol: 'x' },
         { id: '3-15', equation: '2x + 5 = x + 2', optimalMoves: 3, varSymbol: 'x' },
-        { id: '3-16', equation: '4x - 4 = 2x + 2', optimalMoves: 4, varSymbol: 'x' },
-        { id: '3-17', equation: '3x + 4 = x + 8', optimalMoves: 4, varSymbol: 'x' },
-        { id: '3-18', equation: '4x + 1 = 3x - 2', optimalMoves: 2, varSymbol: 'x' },
-        { id: '3-19', equation: '2x - 5 = x - 3', optimalMoves: 3, varSymbol: 'x' },
-        { id: '3-20', equation: '3x + 3 = 12', optimalMoves: 2, varSymbol: 'x' }
+        { id: '3-16', equation: 'x/2 + 3 = 7', optimalMoves: 3, varSymbol: 'x' },
+        { id: '3-17', equation: '3(2x - 1) = 4x + 5', optimalMoves: 4, varSymbol: 'x' },
+        { id: '3-18', equation: '(2x + 4)/2 = x + 2', optimalMoves: 3, varSymbol: 'x' },
+        { id: '3-19', equation: '2(x/2 + 1) = 4', optimalMoves: 3, varSymbol: 'x' },
+        { id: '3-20', equation: '3(x/3 + 2) = 2(x + 1)', optimalMoves: 4, varSymbol: 'x' }
       ]
     }
   ];
@@ -103,54 +103,87 @@ const EquaBalance = (function() {
     },
     parseEquation(eqStr) {
       const [leftStr, rightStr] = eqStr.split('=').map(s => s.trim());
-      const parseSide = (str) => {
-        const termsStr = str.replace(/\s+/g, '').match(/[+-]?[^+-]+/g) || [];
-        return termsStr.map(t => {
-          if (/[a-zA-Z]/.test(t)) {
-            const symbol = t.match(/[a-zA-Z]/)[0];
-            let coeff = t.replace(symbol, '');
-            if (coeff === '' || coeff === '+') coeff = '1';
-            if (coeff === '-') coeff = '-1';
-            return this.createTerm('variable', parseInt(coeff, 10), symbol);
-          }
-          return this.createTerm('number', parseInt(t, 10));
-        });
+      const varSym = eqStr.match(/[a-zA-Z]/)?.[0] || 'x';
+      return { left: this.parseExpression(leftStr, varSym), right: this.parseExpression(rightStr, varSym) };
+    },
+    parseExpression(str, varSym) {
+      str = str.replace(/\s+/g, '');
+      let terms = [];
+      const bubbleRegex = /([+-]?\d*(?:\.\d+)?)\(([^)]+)\)(?:\/(\d+(?:\.\d+)?))?/g;
+      let match;
+      let processedStr = str;
+      while ((match = bubbleRegex.exec(str)) !== null) {
+         let coefStr = match[1];
+         let innerStr = match[2];
+         let divStr = match[3];
+         let multiplier = 1;
+         if (coefStr === '-') multiplier = -1;
+         else if (coefStr !== '' && coefStr !== '+') multiplier = parseFloat(coefStr);
+         if (divStr) multiplier = multiplier / parseFloat(divStr);
+         let innerTerms = this.parseSimpleExpression(innerStr, varSym);
+         terms.push({ type: 'bubble', multiplier, terms: innerTerms, id: 'b_' + Math.random().toString(36).substr(2, 9) });
+         processedStr = processedStr.replace(match[0], '');
+      }
+      if (processedStr.length > 0) terms = terms.concat(this.parseSimpleExpression(processedStr, varSym));
+      return terms;
+    },
+    parseSimpleExpression(str, varSym) {
+      if (!str) return [];
+      let terms = [];
+      const parts = str.match(/[+-]?[^+-]+/g);
+      if (!parts) return [];
+      
+      const parseVal = (s) => {
+         if (s.includes('/')) {
+            const [n, d] = s.split('/');
+            return parseFloat(n) / parseFloat(d);
+         }
+         return parseFloat(s);
       };
-      return { left: parseSide(leftStr), right: parseSide(rightStr) };
+
+      parts.forEach(p => {
+        let isNeg = p.startsWith('-');
+        p = p.replace(/^[+-]/, '');
+        if (p.includes(varSym)) {
+          let numStr = p.replace(varSym, '');
+          if (numStr === '') numStr = '1';
+          if (numStr.startsWith('/')) numStr = '1' + numStr;
+          let val = parseVal(numStr);
+          terms.push({ type: 'variable', val: isNeg ? -val : val, symbol: varSym, id: 't_'+Math.random().toString(36).substr(2,9) });
+        } else {
+          let val = parseVal(p);
+          if (!isNaN(val)) terms.push({ type: 'number', val: isNeg ? -val : val, id: 't_'+Math.random().toString(36).substr(2,9) });
+        }
+      });
+      return terms;
     },
     applyActionToBothSides(leftSide, rightSide, type, value, symbol = 'x') {
-      return {
-        newLeft: [...leftSide, this.createTerm(type, value, symbol)],
-        newRight: [...rightSide, this.createTerm(type, value, symbol)]
-      };
+      const newTerm = { id: Math.random().toString(36).substring(2, 9), type: type === 'variable' ? 'variable' : 'number', val: value, symbol: symbol };
+      return { newLeft: [...leftSide, newTerm], newRight: [...rightSide, newTerm] };
     },
     applyDivisionToBothSides(leftSide, rightSide, divisor) {
-      if (divisor === 0) return { success: false, newLeft: leftSide, newRight: rightSide };
-      const divideSide = side => side.map(t => ({ ...t, value: t.value / divisor, id: Math.random().toString(36).substring(2, 9) }));
+      const divideSide = side => side.map(t => {
+          if (t.type === 'bubble') return { ...t, multiplier: t.multiplier / divisor };
+          return { ...t, val: t.val / divisor };
+      });
       return { success: true, newLeft: divideSide(leftSide), newRight: divideSide(rightSide) };
     },
     tryCombineTerms(side, id1, id2) {
-      const t1Index = side.findIndex(t => t.id === id1);
-      const t2Index = side.findIndex(t => t.id === id2);
-      if (t1Index === -1 || t2Index === -1) return { success: false, newSide: side };
-      const t1 = side[t1Index], t2 = side[t2Index];
-      
-      if (t1.type !== t2.type || t1.symbol !== t2.symbol) return { success: false, newSide: side };
-      
-      const newValue = t1.value + t2.value;
-      let newSide = [...side];
-      if (newValue === 0) {
-        newSide = newSide.filter(t => t.id !== id1 && t.id !== id2);
-      } else {
-        newSide[t1Index] = { ...t1, value: newValue };
-        newSide = newSide.filter(t => t.id !== id2);
-      }
+      const t1 = side.find(t => t.id === id1), t2 = side.find(t => t.id === id2);
+      if (!t1 || !t2 || t1.type === 'bubble' || t2.type === 'bubble' || t1.type !== t2.type || (t1.type === 'variable' && t1.symbol !== t2.symbol)) return { success: false, newSide: side };
+      let newSide = side.filter(t => t.id !== id1 && t.id !== id2);
+      if (t1.val + t2.val !== 0) newSide.push({ ...t1, val: t1.val + t2.val, id: Math.random().toString(36).substring(2,9) });
       return { success: true, newSide };
     },
     checkSolved(leftSide, rightSide) {
-      const isIsolatedVar = side => side.length === 1 && side[0].type === 'variable' && side[0].value === 1;
-      const isSingleNum = side => side.length === 1 && side[0].type === 'number';
-      return (isIsolatedVar(leftSide) && isSingleNum(rightSide)) || (isSingleNum(leftSide) && isIsolatedVar(rightSide));
+      const flatten = side => side.reduce((acc, t) => t.type === 'bubble' ? acc.concat(t.terms.map(it => ({...it, val: it.val * t.multiplier}))) : acc.concat(t), []);
+      const l = flatten(leftSide), r = flatten(rightSide);
+      const isIsolatedVar = s => s.length === 1 && s[0].type === 'variable' && s[0].val === 1;
+      const isSingleNum = s => s.length === 1 && s[0].type === 'number';
+      return (isIsolatedVar(l) && isSingleNum(r)) || (isSingleNum(l) && isIsolatedVar(r));
+    },
+    simplifyState() {
+       // Logic to trigger re-renders or internal state maintenance
     }
   };
 
@@ -200,6 +233,10 @@ const EquaBalance = (function() {
           this.playTone(880, 'sine', 0.1, 0.1);
           setTimeout(() => this.playTone(1760, 'sine', 0.3, 0.1), 100);
           break;
+        case 'pop':
+          this.playTone(600, 'sine', 0.1, 0.1);
+          setTimeout(() => this.playTone(800, 'sine', 0.1, 0.1), 50);
+          break;
       }
     }
   };
@@ -241,11 +278,19 @@ const EquaBalance = (function() {
       };
       
       const dynamicFail = {
-        'c': ["Sistema: Choque físico. Las cajas numéricas no se anulan así.", "Cero: No puedes fusionar cajas con otros elementos. Usa opuestos."],
+        'c': ["Sistema: Operación inválida. Carga desequilibrada.", "Ren: Eso no funciona con estas cajas."],
         'a': ["Cero: Los números y la criatura no se mezclan. ¡Despéjala!"],
-        'm': ["Sistema: Polaridad biológica incompatible. Busca el opuesto numérico."],
+        'm': ["Sistema: Combinación biológica rechazada."],
         's': ["Cero: La energía de la estrella rechazó tu movimiento. Ten cuidado."],
-        'x': ["Sistema: Error de sintaxis en el tejido. Variables no compatibles."]
+        'x': ["Sistema: Error de sintaxis. Variables y enteros son inmiscibles."]
+      };
+
+      const dynamicBubbleExpanded = {
+        'c': ["Ren: Escudo colapsado. Procedo a despejar la zona."],
+        'a': ["Ren: ¡Contención rota! Las criaturas están libres."],
+        'm': ["Sistema: Campo biológico abierto."],
+        's': ["Ren: Firewall roto. Firmas de energía expuestas."],
+        'x': ["Ren: Protocolo ejecutado. Paréntesis purgados del código."]
       };
 
       let pool = ["Sistema en línea."];
@@ -253,6 +298,7 @@ const EquaBalance = (function() {
       if (event === 'load_two_vars') pool = dynamicLoadTwoVars[symbol] || dynamicLoadTwoVars['x'];
       if (event === 'win') pool = dynamicWin[symbol] || dynamicWin['x'];
       if (event === 'fail') pool = dynamicFail[symbol] || dynamicFail['x'];
+      if (event === 'bubble_expanded') pool = dynamicBubbleExpanded[symbol] || dynamicBubbleExpanded['x'];
       
       return pool[Math.floor(Math.random() * pool.length)];
     }
@@ -344,6 +390,13 @@ const EquaBalance = (function() {
              xpSpan.textContent = totalXP;
              AudioEngine.play('level_complete');
              btnEnd.style.display = 'block';
+             
+             if (totalXP > state.xp) {
+                window.dispatchEvent(new CustomEvent('EQUABALANCE_SOLVED', { 
+                  detail: { xpEarned: totalXP - state.xp, perfect: false }
+                }));
+             }
+             
              state.xp = totalXP; 
           }
         }, 40);
@@ -395,10 +448,9 @@ const EquaBalance = (function() {
       const stage = stages[state.stageIdx];
       const level = state.currentStageLevels[state.levelIdx];
 
-      if (!stage || !level) return; // Should be handled by loadLevel
+      if (!stage || !level) return; 
 
       const formatTime = (s) => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
-      
       const currentSymbol = level.varSymbol || 'x';
       const displaySym = SYMBOL_MAP[currentSymbol] || currentSymbol;
 
@@ -444,47 +496,46 @@ const EquaBalance = (function() {
           <div class="eb-action-panel">
             ${stage.id === 1 ? `
               <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; max-width:500px; margin: 0 auto;">
-                <button class="eb-btn-action" data-action="add" data-type="number" data-value="1" style="padding:15px 0;">+1 Unidad</button>
-                <button class="eb-btn-action" data-action="add" data-type="number" data-value="-1" style="padding:15px 0;">-1 Unidad</button>
-                <button class="eb-btn-action" style="background:#3d59a1; padding:15px 0;" data-action="add" data-type="variable" data-value="1" data-symbol="${currentSymbol}">+1 ${displaySym}</button>
-                <button class="eb-btn-action" style="background:#3d59a1; padding:15px 0;" data-action="add" data-type="variable" data-value="-1" data-symbol="${currentSymbol}">-1 ${displaySym}</button>
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="1">+1</button>
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="-1">-1</button>
+                <button class="eb-btn-action" data-action="add" data-type="variable" data-value="1" data-symbol="${currentSymbol}">+${displaySym}</button>
+                <button class="eb-btn-action" data-action="add" data-type="variable" data-value="-1" data-symbol="${currentSymbol}">-${displaySym}</button>
               </div>
             ` : stage.id === 2 ? `
               <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 100%;">
                 <button class="eb-btn-action" data-action="add" data-type="number" data-value="1">+1</button>
                 <button class="eb-btn-action" data-action="add" data-type="number" data-value="2">+2</button>
-                <button class="eb-btn-action" data-action="add" data-type="number" data-value="3">+3</button>
-                <button class="eb-btn-action" data-action="add" data-type="number" data-value="5">+5</button>
-                <button class="eb-btn-action" style="background:#3d59a1;" data-action="add" data-type="variable" data-value="1" data-symbol="${currentSymbol}">+${displaySym}</button>
-                
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="0.5">+0.5</button>
+                <button class="eb-btn-action" data-action="add" data-type="variable" data-value="1" data-symbol="${currentSymbol}">+${displaySym}</button>
+                <button class="eb-btn-action" data-action="add" data-type="variable" data-value="2" data-symbol="${currentSymbol}">+2${displaySym}</button>
                 <button class="eb-btn-action" data-action="add" data-type="number" data-value="-1">-1</button>
                 <button class="eb-btn-action" data-action="add" data-type="number" data-value="-2">-2</button>
-                <button class="eb-btn-action" data-action="add" data-type="number" data-value="-3">-3</button>
-                <button class="eb-btn-action" data-action="add" data-type="number" data-value="-5">-5</button>
-                <button class="eb-btn-action" style="background:#3d59a1;" data-action="add" data-type="variable" data-value="-1" data-symbol="${currentSymbol}">-${displaySym}</button>
+                <button class="eb-btn-action" data-action="add" data-type="number" data-value="-0.5">-0.5</button>
+                <button class="eb-btn-action" data-action="add" data-type="variable" data-value="-1" data-symbol="${currentSymbol}">-${displaySym}</button>
+                <button class="eb-btn-action" data-action="add" data-type="variable" data-value="-2" data-symbol="${currentSymbol}">-2${displaySym}</button>
               </div>
             ` : `
               <div style="display:flex; flex-direction:column; gap:8px; width: 100%;">
                 <div style="display:grid; grid-template-columns: repeat(6, 1fr); gap: 5px;">
-                  <button class="eb-btn-action" data-action="add" data-type="number" data-value="1" style="padding:10px 0; font-size:1rem;">+1</button>
-                  <button class="eb-btn-action" data-action="add" data-type="number" data-value="2" style="padding:10px 0; font-size:1rem;">+2</button>
-                  <button class="eb-btn-action" data-action="add" data-type="number" data-value="3" style="padding:10px 0; font-size:1rem;">+3</button>
-                  <button class="eb-btn-action" data-action="add" data-type="number" data-value="-1" style="padding:10px 0; font-size:1rem;">-1</button>
-                  <button class="eb-btn-action" data-action="add" data-type="number" data-value="-2" style="padding:10px 0; font-size:1rem;">-2</button>
-                  <button class="eb-btn-action" data-action="add" data-type="number" data-value="-3" style="padding:10px 0; font-size:1rem;">-3</button>
+                  <button class="eb-btn-action" data-action="add" data-type="number" data-value="1">+1</button>
+                  <button class="eb-btn-action" data-action="add" data-type="number" data-value="2">+2</button>
+                  <button class="eb-btn-action" data-action="add" data-type="number" data-value="3">+3</button>
+                  <button class="eb-btn-action" data-action="add" data-type="number" data-value="-1">-1</button>
+                  <button class="eb-btn-action" data-action="add" data-type="number" data-value="-2">-2</button>
+                  <button class="eb-btn-action" data-action="add" data-type="number" data-value="-3">-3</button>
                 </div>
                 <div style="display:grid; grid-template-columns: repeat(6, 1fr); gap: 5px;">
-                  <button class="eb-btn-action" style="background:#3d59a1; padding:10px 0; font-size:1rem;" data-action="add" data-type="variable" data-value="1" data-symbol="${currentSymbol}">+${displaySym}</button>
-                  <button class="eb-btn-action" style="background:#3d59a1; padding:10px 0; font-size:1rem;" data-action="add" data-type="variable" data-value="2" data-symbol="${currentSymbol}">+2${displaySym}</button>
-                  <button class="eb-btn-action" style="background:#3d59a1; padding:10px 0; font-size:1rem;" data-action="add" data-type="variable" data-value="3" data-symbol="${currentSymbol}">+3${displaySym}</button>
-                  <button class="eb-btn-action" style="background:#3d59a1; padding:10px 0; font-size:1rem;" data-action="add" data-type="variable" data-value="-1" data-symbol="${currentSymbol}">-${displaySym}</button>
-                  <button class="eb-btn-action" style="background:#3d59a1; padding:10px 0; font-size:1rem;" data-action="add" data-type="variable" data-value="-2" data-symbol="${currentSymbol}">-2${displaySym}</button>
-                  <button class="eb-btn-action" style="background:#3d59a1; padding:10px 0; font-size:1rem;" data-action="add" data-type="variable" data-value="-3" data-symbol="${currentSymbol}">-3${displaySym}</button>
+                  <button class="eb-btn-action" data-action="add" data-type="variable" data-value="1" data-symbol="${currentSymbol}">+${displaySym}</button>
+                  <button class="eb-btn-action" data-action="add" data-type="variable" data-value="2" data-symbol="${currentSymbol}">+2${displaySym}</button>
+                  <button class="eb-btn-action" data-action="add" data-type="variable" data-value="3" data-symbol="${currentSymbol}">+3${displaySym}</button>
+                  <button class="eb-btn-action" data-action="add" data-type="variable" data-value="-1" data-symbol="${currentSymbol}">-${displaySym}</button>
+                  <button class="eb-btn-action" data-action="add" data-type="variable" data-value="-2" data-symbol="${currentSymbol}">-2${displaySym}</button>
+                  <button class="eb-btn-action" data-action="add" data-type="variable" data-value="-3" data-symbol="${currentSymbol}">-3${displaySym}</button>
                 </div>
                 <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 5px;">
-                  <button class="eb-btn-action divide" data-action="div" data-value="2" style="padding:10px 0; font-size:1rem;">÷2 Ambos Lados</button>
-                  <button class="eb-btn-action divide" data-action="div" data-value="3" style="padding:10px 0; font-size:1rem;">÷3 Ambos Lados</button>
-                  <button class="eb-btn-action divide" data-action="div" data-value="4" style="padding:10px 0; font-size:1rem;">÷4 Ambos Lados</button>
+                  <button class="eb-btn-action divide" data-action="div" data-value="2">÷2 Ambos Lados</button>
+                  <button class="eb-btn-action divide" data-action="div" data-value="3">÷3 Ambos Lados</button>
+                  <button class="eb-btn-action divide" data-action="div" data-value="4">÷4 Ambos Lados</button>
                 </div>
               </div>
             `}
@@ -495,115 +546,60 @@ const EquaBalance = (function() {
       this.attachEvents();
     },
 
-    renderTerms(side) {
-      return side.map(term => {
-        const isVar = term.type === 'variable';
-        let valDisp = term.value;
+    renderTerms(terms) {
+      if (terms.length === 0) return `<div class="eb-term-block" style="background:transparent;box-shadow:none;color:transparent;">0</div>`;
+      return terms.map(t => {
+        if (t.type === 'bubble') {
+           return `
+             <div class="eb-bubble-container" data-id="${t.id}">
+                <div class="eb-bubble-multiplier">${t.multiplier < 0 ? '-' : ''}${Math.abs(t.multiplier) !== 1 ? Math.abs(t.multiplier) : ''}</div>
+                <div class="eb-bubble-content">${this.renderTerms(t.terms)}</div>
+             </div>
+           `;
+        }
+        const isVar = t.type === 'variable';
+        let valDisp = t.val;
         if (!Number.isInteger(valDisp)) valDisp = Number(valDisp.toFixed(2));
-        
-        const mappedSymbol = isVar ? (SYMBOL_MAP[term.symbol] || term.symbol) : '';
-        
-        // Si el valor absoluto es 1, solo mostramos el símbolo (o su negativo)
-        const disp = isVar 
-          ? (Math.abs(valDisp) === 1 ? (valDisp < 0 ? `-${mappedSymbol}` : mappedSymbol) : `${valDisp}${mappedSymbol}`)
-          : valDisp;
-          
-        const cls = `eb-term-block ${isVar ? 'eb-term-var' : 'eb-term-num'} ${term.value < 0 ? 'eb-term-negative' : 'eb-term-positive'}`;
-        return `<div class="${cls}" draggable="true" data-id="${term.id}"><div class="eb-term-content">${disp}</div></div>`;
+        const display = isVar ? `${valDisp === 1 ? '' : (valDisp === -1 ? '-' : valDisp)}${SYMBOL_MAP[t.symbol] || t.symbol}` : valDisp;
+        return `<div class="eb-term-block ${isVar ? 'eb-term-var' : 'eb-term-num'}" draggable="true" data-id="${t.id}"><div class="eb-term-content">${display}</div></div>`;
       }).join('');
     },
 
     attachEvents() {
-      // Botones de acción estándar
       document.querySelectorAll('.eb-btn-action[data-action]').forEach(btn => {
         btn.onclick = (e) => {
           const action = e.currentTarget.dataset.action;
-          if (action === 'add') {
-             const symbol = e.currentTarget.dataset.symbol || 'x';
-             Controller.actionBothSides(e.currentTarget.dataset.type, parseInt(e.currentTarget.dataset.value), symbol);
-          }
-          else if (action === 'div') {
-             Controller.divideBothSides(parseInt(e.currentTarget.dataset.value));
-          }
+          if (action === 'add') Controller.actionBothSides(e.currentTarget.dataset.type, parseFloat(e.currentTarget.dataset.value), e.currentTarget.dataset.symbol || 'x');
+          else if (action === 'div') Controller.divideBothSides(parseFloat(e.currentTarget.dataset.value));
         };
       });
 
-      // Eventos Drag & Drop
+      document.querySelectorAll('.eb-bubble-container').forEach(b => {
+        b.onclick = (e) => {
+           e.stopPropagation();
+           Controller.expandBubble(b.dataset.id);
+        };
+      });
+
       document.querySelectorAll('.eb-term-block').forEach(b => {
-        b.ondragstart = (e) => {
-          state.draggedId = e.target.closest('.eb-term-block').dataset.id;
-          e.dataTransfer.effectAllowed = 'move';
-          setTimeout(() => b.classList.add('dragging'), 0); // Estilo mientras se arrastra
-        };
-        b.ondragend = (e) => {
-          b.classList.remove('dragging');
-          document.querySelectorAll('.eb-board-side').forEach(side => side.classList.remove('drag-over'));
+        b.ondragstart = (e) => { state.draggedId = b.dataset.id; };
+      });
+
+      document.querySelectorAll('.eb-board-side').forEach(side => {
+        side.ondragover = (e) => e.preventDefault();
+        side.ondrop = (e) => {
+          const target = e.target.closest('.eb-term-block');
+          if (target && state.draggedId) Controller.combineTerms(side.dataset.side, state.draggedId, target.dataset.id, e.clientX, e.clientY);
         };
       });
 
-      const handleDragOver = (e) => {
-        e.preventDefault();
-        const side = e.target.closest('.eb-board-side');
-        if (side) side.classList.add('drag-over');
-      };
-      
-      const handleDragLeave = (e) => {
-        const side = e.target.closest('.eb-board-side');
-        if (side) side.classList.remove('drag-over');
-      };
-
-      const handleDrop = (sideId) => (e) => {
-        e.preventDefault();
-        const side = e.target.closest('.eb-board-side');
-        if (side) side.classList.remove('drag-over');
-        
-        const targetBlock = e.target.closest('.eb-term-block');
-        if (targetBlock && state.draggedId && state.draggedId !== targetBlock.dataset.id) {
-          Controller.combineTerms(sideId, state.draggedId, targetBlock.dataset.id, e.clientX, e.clientY);
-        }
-        state.draggedId = null;
-      };
-
-      const leftSide = document.getElementById('eb-left-side');
-      const rightSide = document.getElementById('eb-right-side');
-      if (leftSide) { 
-        leftSide.ondragover = handleDragOver; 
-        leftSide.ondragleave = handleDragLeave;
-        leftSide.ondrop = handleDrop('left'); 
-      }
-      if (rightSide) { 
-        rightSide.ondragover = handleDragOver; 
-        rightSide.ondragleave = handleDragLeave;
-        rightSide.ondrop = handleDrop('right');        
-      };
-
-      // Mostrar mensaje inicial si acabamos de renderizar el contenedor base
-      if (!this.typeInterval) {
-         const currentLevel = state.currentStageLevels[state.levelIdx];
-         this.showCommlinkMessage(Narrator.getMessage(state.stageIdx, 'load', currentLevel?.varSymbol));
-      }
+      if (!this.typeInterval) UI.showCommlinkMessage(Narrator.getMessage(state.stageIdx, 'load', state.currentStageLevels[state.levelIdx]?.varSymbol));
     },
     
     showCommlinkMessage(text, isError = false) {
       const comm = document.getElementById('eb-commlink-text');
-      const box = document.getElementById('eb-commlink');
-      if (!comm || !box) return;
-      
-      comm.textContent = '';
-      box.style.borderLeftColor = isError ? 'var(--eb-error)' : 'var(--eb-primary)';
-      comm.style.color = isError ? 'var(--eb-error)' : 'var(--eb-text-bright)';
-      
-      // Destello de caja
-      box.style.backgroundColor = isError ? 'rgba(247, 118, 142, 0.2)' : 'rgba(122, 162, 247, 0.1)';
-      setTimeout(() => box.style.backgroundColor = 'rgba(0,0,0,0.4)', 200);
-      
-      let i = 0;
-      clearInterval(this.typeInterval);
-      this.typeInterval = setInterval(() => {
-        comm.textContent += text.charAt(i);
-        i++;
-        if (i >= text.length) clearInterval(this.typeInterval);
-      }, 30); // 30ms por carácter (efecto máquina de escribir)
+      if (!comm) return;
+      comm.textContent = text;
     },
     
     createParticles(x, y) {
@@ -659,7 +655,7 @@ const EquaBalance = (function() {
            if (finalVar && finalNum) {
              const mappedSymbol = SYMBOL_MAP[finalVar.symbol] || finalVar.symbol;
              // Formateo del decimal
-             let valDisp = finalNum.value;
+             let valDisp = finalNum.val;
              if (!Number.isInteger(valDisp)) valDisp = Number(valDisp.toFixed(2));
              resultString = `${mappedSymbol} = ${valDisp}`;
            }
@@ -688,17 +684,10 @@ const EquaBalance = (function() {
   // --- CONTROLADOR ---
   const Controller = {
     start(options, onEnd) {
-      AudioEngine.init(); // Permiso de audio del usuario
-      
+      AudioEngine.init();
       const curso = options?.curso || '3ro';
-      if (curso === '1ro') state.stageIdx = 0;
-      else if (curso === '2do') state.stageIdx = 1;
-      else state.stageIdx = 2; // 3ro por defecto
-      
-      // Preparar niveles aleatorios de la etapa correspondiente
-      const allLevels = stages[state.stageIdx].levels;
-      state.currentStageLevels = [...allLevels].sort(() => 0.5 - Math.random()).slice(0, 5); // 5 niveles por sesión
-      
+      state.stageIdx = curso === '1ro' ? 0 : (curso === '2do' ? 1 : 2);
+      state.currentStageLevels = [...stages[state.stageIdx].levels].sort(() => 0.5 - Math.random()).slice(0, 5);
       state.levelIdx = 0;
       state.time = 0;
       state.xp = 0;
@@ -706,20 +695,50 @@ const EquaBalance = (function() {
       state.evaluationMode = options?.evaluationMode || false;
       state.evalHistory = [];
       state.onEndCallback = onEnd;
-      
       UI.initStyles();
-      this.loadLevel(true); // true = es una nueva etapa, mostrar intro
-      
-      if (state.timerId) clearInterval(state.timerId);
-      state.timerId = setInterval(() => {
-        state.time++;
-        const tEl = document.getElementById('eb-timer-display');
-        if (tEl) tEl.textContent = `${Math.floor(state.time/60)}:${(state.time%60).toString().padStart(2,'0')}`;
+      this.loadLevel(true);
+      if(state.timerId) clearInterval(state.timerId);
+      state.timerId = setInterval(() => { 
+          state.time++; 
+          const tEl = document.getElementById('eb-timer-display');
+          if(tEl) tEl.textContent = `${Math.floor(state.time/60)}:${(state.time%60).toString().padStart(2,'0')}`;
       }, 1000);
     },
     
     stop() {
       if (state.timerId) clearInterval(state.timerId);
+    },
+
+    expandBubble(bubbleId) {
+       let foundSide = null;
+       let bIndex = state.leftSide.findIndex(t => t.id === bubbleId);
+       if (bIndex !== -1) foundSide = state.leftSide;
+       else {
+          bIndex = state.rightSide.findIndex(t => t.id === bubbleId);
+          if (bIndex !== -1) foundSide = state.rightSide;
+       }
+       
+       if (!foundSide) return;
+       
+       const bubble = foundSide[bIndex];
+       foundSide.splice(bIndex, 1);
+       
+       bubble.terms.forEach(t => {
+          let newVal = t.val * bubble.multiplier;
+          foundSide.push({ ...t, val: newVal, id: 't_' + Math.random().toString(36).substr(2,9) });
+       });
+       
+       state.moves++;
+       AudioEngine.play('pop');
+       
+       const el = document.querySelector(`[data-id="${bubbleId}"]`);
+       if(el) {
+          const rect = el.getBoundingClientRect();
+          UI.createParticles(rect.left + rect.width/2, rect.top + rect.height/2);
+       }
+       
+       UI.render();
+       UI.showCommlinkMessage(Narrator.getMessage(state.stageIdx, 'bubble_expanded', bubble.terms[0]?.symbol || 'x'));
     },
     
     loadLevel(isNewStage = false) {

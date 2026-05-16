@@ -452,6 +452,11 @@ window.addEventListener('EQUABALANCE_SOLVED', (e) => {
   
   localStorage.setItem(key, JSON.stringify(xpData));
   
+  // Sincronizar con Firebase (Cloud)
+  if (typeof sincronizarConNube === 'function') {
+      sincronizarConNube(xpData);
+  }
+  
   // Procesar misiones (con tipo falso 'equabalance' para contar partidas)
   if (window.procesarMisionesTerminadas) {
     procesarMisionesTerminadas('equabalance', perfect ? 10 : 8, xpEarned, perfect ? 0 : 1);
